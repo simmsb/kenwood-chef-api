@@ -1,0 +1,3 @@
+[workspace]
+members = ["api", "types", "db", "migration"]
+resolver = "3"
