@@ -14,4 +14,4 @@ devenv.local.yaml
 
 /target
 
-*.sqlute
+*.sqlite

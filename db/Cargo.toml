@@ -4,4 +4,12 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-sea-orm = { version = "1.1.19", features = ["sqlx-sqlite", "macros", "runtime-tokio-rustls", "with-json"] }
+types = { path = "../types" }
+migration = { path = "../migration" }
+sea-orm = { version = "^2.0.0-rc", features = ["sqlx-sqlite", "macros", "runtime-tokio-rustls", "with-json"] }
+anyhow = "1.0.100"
+serde = "1.0.228"
+serde_json = "1.0.145"
+color-eyre = "0.6.5"
+tracing = "0.1.43"
+jiff = { version = "0.2.16", default-features = false, features = ["serde", "std"] }
