@@ -7,10 +7,8 @@ pub struct IngredientAllowedUnit {
     pub id: String,
     pub name: String,
 
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub abbreviation: Option<String>,
 
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub dimension: Option<String>,
 }
 
@@ -99,13 +97,10 @@ pub struct RecipeStepCapabilitySettingValue {
     #[serde(rename = "type")]
     pub type_: String,
 
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub reference_nit: Option<ReferenceUnit>,
 
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub reference_value: Option<RecipeStepCapabilitySettingValueReferenceValue>,
 
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub value: Option<Value>,
 }
 
@@ -166,16 +161,12 @@ pub struct Recipe {
     pub total_time: jiff::SignedDuration,
     pub visibility: String,
 
-    #[serde(skip_serializing_if = "Option::is_none", with = "span_field_wise_opt")]
     pub cook_time: Option<jiff::SignedDuration>,
 
-    #[serde(skip_serializing_if = "Option::is_none", with = "span_field_wise_opt")]
     pub prep_time: Option<jiff::SignedDuration>,
 
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub referenced: Option<bool>,
 
-    #[serde(skip_serializing_if = "Option::is_none")]
     pub requester_role: Option<String>,
 }
 
