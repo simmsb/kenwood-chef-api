@@ -1,10 +1,9 @@
 use std::collections::HashMap;
 
 use crate::components::{
-    button::Button, card::*, input::Input, label::Label, select::Select, tabs::*,
+    card::*, input::Input, label::Label, tabs::*,
     textarea::Textarea,
 };
-use crate::Route;
 use dioxus::prelude::*;
 
 #[component]
@@ -26,7 +25,7 @@ pub fn EditRecipe(id: String) -> Element {
     let recipe_initial = use_loader(move || recipe_server(id.clone()))?.cloned();
     let mut recipe = use_signal(move || recipe_initial);
 
-    let ingredients = use_loader(move || ingredients_server())?;
+    let ingredients = use_loader(ingredients_server)?;
     let ingredients_map = use_memo(move || {
         ingredients
             .iter()
@@ -72,7 +71,7 @@ pub fn EditRecipe(id: String) -> Element {
                             .map(|x| x.to_string())
                             .unwrap_or(String::new()),
                         oninput: move |e: FormEvent| {
-                            if let Some(t) = e.value().parse::<i64>().ok() {
+                            if let Ok(t) = e.value().parse::<i64>() {
                                 recipe.write().prep_time = Some(jiff::SignedDuration::from_mins(t));
                             }
                         }
@@ -97,7 +96,7 @@ pub fn EditRecipe(id: String) -> Element {
                             .map(|x| x.to_string())
                             .unwrap_or(String::new()),
                         oninput: move |e: FormEvent| {
-                            if let Some(t) = e.value().parse::<i64>().ok() {
+                            if let Ok(t) = e.value().parse::<i64>() {
                                 recipe.write().cook_time = Some(jiff::SignedDuration::from_mins(t));
                             }
                         }
@@ -117,7 +116,7 @@ pub fn EditRecipe(id: String) -> Element {
                         min: 0,
                         value: recipe.read().serves,
                         oninput: move |e: FormEvent| {
-                            if let Some(x) = e.value().parse::<u8>().ok() {
+                            if let Ok(x) = e.value().parse::<u8>() {
                                 recipe.write().serves = x;
                             }
                         }

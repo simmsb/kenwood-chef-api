@@ -3,10 +3,8 @@
 //! component and an Echo component for fullstack apps to be used in our app.
 
 mod hero;
-pub use hero::Hero;
 
 mod echo;
-pub use echo::Echo;
 
 mod recipe_item;
 pub use recipe_item::RecipeItem;

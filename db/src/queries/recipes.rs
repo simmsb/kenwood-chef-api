@@ -1,7 +1,5 @@
-use color_eyre::eyre::Context as _;
 use color_eyre::eyre::OptionExt as _;
 use color_eyre::eyre::eyre;
-use sea_orm::ColumnTrait as _;
 use sea_orm::DatabaseConnection;
 use sea_orm::EntityLoaderTrait;
 use sea_orm::EntityLoaderTrait as _;
@@ -9,7 +7,6 @@ use sea_orm::QueryFilter;
 
 use crate::entities;
 use crate::entities::prelude::*;
-use crate::entities::recipe;
 
 pub async fn list_recipes(
     db: &DatabaseConnection,

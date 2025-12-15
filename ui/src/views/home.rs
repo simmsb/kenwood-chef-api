@@ -1,7 +1,7 @@
 use std::num::Saturating;
 
 use crate::components::{paginate::Pagination, RecipeItem};
-use dioxus::{prelude::*, CapturedError};
+use dioxus::prelude::*;
 
 /// The Home page component that will be rendered when the current route is `[Route::Home]`
 #[component]

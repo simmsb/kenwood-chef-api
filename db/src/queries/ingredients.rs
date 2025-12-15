@@ -1,7 +1,4 @@
-use color_eyre::eyre::Context as _;
 use color_eyre::eyre::OptionExt as _;
-use color_eyre::eyre::eyre;
-use sea_orm::ColumnTrait as _;
 use sea_orm::DatabaseConnection;
 use sea_orm::EntityLoaderTrait;
 use sea_orm::EntityLoaderTrait as _;
@@ -9,8 +6,6 @@ use sea_orm::EntityTrait as _;
 use sea_orm::ModelTrait;
 use sea_orm::QueryFilter;
 
-use crate::entities;
-use crate::entities::ingredient;
 use crate::entities::prelude::*;
 
 pub async fn list_ingredients(
