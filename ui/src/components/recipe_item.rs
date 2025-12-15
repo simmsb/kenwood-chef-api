@@ -1,8 +1,8 @@
 use dioxus::prelude::*;
 
-use crate::Route;
-use crate::components::card::*;
 use crate::components::button::*;
+use crate::components::card::*;
+use crate::Route;
 
 #[component]
 pub fn RecipeItem(recipe: types::Recipe) -> Element {

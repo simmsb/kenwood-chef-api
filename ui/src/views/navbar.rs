@@ -1,4 +1,4 @@
-use crate::{Route, components::button::LinkButton};
+use crate::{components::button::LinkButton, Route};
 use dioxus::prelude::*;
 
 #[component]

@@ -1,2 +1,2 @@
-pub mod recipes;
 pub mod ingredients;
+pub mod recipes;

@@ -180,7 +180,7 @@ pub struct Recipe {
 }
 
 pub mod span_field_wise {
-    use jiff::{Span, SignedDuration, SpanRelativeTo};
+    use jiff::{SignedDuration, Span, SpanRelativeTo};
     use serde::{self, Deserialize, Deserializer, Serialize, Serializer};
 
     pub fn serialize<S>(date: &SignedDuration, serializer: S) -> Result<S::Ok, S::Error>
@@ -196,27 +196,29 @@ pub mod span_field_wise {
     {
         let span = Span::deserialize(deserializer)?;
 
-        Ok(span.to_duration(SpanRelativeTo::days_are_24_hours()).unwrap())
+        Ok(span
+            .to_duration(SpanRelativeTo::days_are_24_hours())
+            .unwrap())
     }
 }
 
 pub mod span_field_wise_opt {
-    use jiff::{Span, SignedDuration, SpanRelativeTo};
+    use jiff::{SignedDuration, Span, SpanRelativeTo};
     use serde::{self, Deserialize, Deserializer, Serialize, Serializer};
 
     pub fn serialize<S>(date: &Option<SignedDuration>, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
-        date.map(|x| Span::try_from(x).unwrap()).serialize(serializer)
+        date.map(|x| Span::try_from(x).unwrap())
+            .serialize(serializer)
     }
 
     pub fn deserialize<'de, D>(deserializer: D) -> Result<Option<SignedDuration>, D::Error>
     where
         D: Deserializer<'de>,
     {
-        Ok(Option::<Span>::deserialize(deserializer)?.map(
-            |x| x.to_duration(SpanRelativeTo::days_are_24_hours()).unwrap()
-        ))
+        Ok(Option::<Span>::deserialize(deserializer)?
+            .map(|x| x.to_duration(SpanRelativeTo::days_are_24_hours()).unwrap()))
     }
 }

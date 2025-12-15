@@ -76,7 +76,12 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table(Author::Table)
                     .if_not_exists()
-                    .col(integer(Author::Id).primary_key().auto_increment().not_null())
+                    .col(
+                        integer(Author::Id)
+                            .primary_key()
+                            .auto_increment()
+                            .not_null(),
+                    )
                     .col(string(Author::Name).not_null())
                     .col(string(Author::Image).not_null())
                     .col(string(Author::Url).not_null())
