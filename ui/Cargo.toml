@@ -7,15 +7,15 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-types = { path = "../types" }
-db = { path = "../db", optional = true }
+db = { workspace = true, optional = true } #unified
 dioxus = { version = "0.7.2", features = ["router", "fullstack"] }
-dioxus-query = "0.9.0"
 dioxus-primitives = { git = "https://github.com/DioxusLabs/components", version = "0.0.1", default-features = false, features = ["router"] }
+dioxus-query = "0.9.0"
+jiff = { workspace = true } #unified
 sea-orm = { version = "^2.0.0-rc", features = ["sqlx-sqlite", "macros", "runtime-tokio-rustls", "with-json"], optional = true }
-tokio = { version = "1.48.0", features = ["full"], optional = true }
-tracing = { version = "0.1.43", features = ["async-await"] }
-jiff = { version = "0.2.16", default-features = false, features = ["serde", "std"] }
+tokio = { workspace = true, optional = true } #unified
+tracing = { workspace = true } #unified
+types = { workspace = true } #unified
 
 [features]
 default = ["server", "web"]
