@@ -15,5 +15,7 @@ pub mod label;
 pub mod navbar;
 pub mod paginate;
 pub mod select;
+pub mod searching_select;
 pub mod tabs;
 pub mod textarea;
+pub mod checkbox;

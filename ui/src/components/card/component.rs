@@ -78,12 +78,14 @@ pub fn CardAction(
 
 #[component]
 pub fn CardContent(
+    #[props(default)]
+    class: String,
     #[props(extends=GlobalAttributes)] attributes: Vec<Attribute>,
     children: Element,
 ) -> Element {
     rsx! {
         div {
-            class: "card-content",
+            class: "{class} card-content",
             "data-slot": "card-content",
             ..attributes,
             {children}

@@ -1,6 +1,8 @@
+pub mod values;
+pub use values::KnownOptions;
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 
 #[derive(Serialize, Deserialize, Clone, PartialEq)]
 pub struct IngredientAllowedUnit {
@@ -10,6 +12,16 @@ pub struct IngredientAllowedUnit {
     pub abbreviation: Option<String>,
 
     pub dimension: Option<String>,
+}
+
+impl IngredientAllowedUnit {
+    pub fn as_reference_unit(self) -> ReferenceUnit {
+        ReferenceUnit {
+            id: self.id,
+            abbreviation: self.abbreviation.unwrap_or_else(String::new),
+            name: self.name,
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize, Clone, PartialEq)]
@@ -39,22 +51,20 @@ pub struct ReferenceUnit {
 }
 
 #[derive(Serialize, Deserialize, Clone, PartialEq)]
-pub struct ReferenceIngredient {
-    pub id: String,
-    pub name: String,
-}
-
-#[derive(Serialize, Deserialize, Clone, PartialEq)]
 pub struct ReferencePreparation {
     pub id: String,
     pub name: String,
 }
 
+#[serde_with::serde_as]
 #[derive(Serialize, Deserialize, Clone, PartialEq)]
 pub struct RecipeIngredient {
     pub quantity: Quantity,
-    pub reference_ingredient: ReferenceIngredient,
-    pub reference_preparations: Option<Vec<ReferencePreparation>>,
+    pub reference_ingredient: Ingredient,
+
+    #[serde_as(deserialize_as = "serde_with::DefaultOnNull")]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub reference_preparations: Vec<ReferencePreparation>,
     pub source_text: Option<String>,
 }
 
@@ -78,43 +88,72 @@ pub struct ReferenceCapability {
     pub name: String,
 }
 
+#[derive(Serialize, Deserialize, Copy, Clone, PartialEq, strum::Display, strum::EnumString)]
+pub enum ReferenceSettingId {
+    #[serde(rename = "kitchenos:Kenwood:KeepWarmSetting")]
+    KeepWarm,
+
+    #[serde(
+        rename = "kitchenos:Kenwood:TemperatureSetting",
+        alias = "cckg:InternalTemperatureSetting",
+        alias = "cckg:TemperatureSetting"
+    )]
+    Temperature,
+
+    #[serde(rename = "kitchenos:Kenwood:SpeedSetting")]
+    Speed,
+
+    #[serde(rename = "kitchenos:Kenwood:TimeSetting", alias = "cckg:TimeSetting")]
+    Time,
+}
+
 #[derive(Serialize, Deserialize, Clone, PartialEq)]
-pub struct RecipeStepCapabilitySettingReferenceSetting {
+pub struct ReferenceSetting {
+    pub id: ReferenceSettingId,
+    pub name: String,
+}
+
+#[derive(Serialize, Deserialize, Clone, PartialEq)]
+pub struct ReferenceValue {
     pub id: String,
     pub name: String,
 }
 
 #[derive(Serialize, Deserialize, Clone, PartialEq)]
-pub struct RecipeStepCapabilitySettingValueReferenceValue {
-    pub id: String,
-    pub name: String,
-}
+#[serde(tag = "type")]
+pub enum SettingValue {
+    #[serde(rename = "numeric")]
+    Numeric {
+        reference_unit: Option<ReferenceUnit>,
+        text: String,
+        value: f64,
+    },
 
-#[derive(Serialize, Deserialize, Clone, PartialEq)]
-pub struct RecipeStepCapabilitySettingValue {
-    pub text: String,
+    #[serde(rename = "boolean")]
+    Boolean { text: String, value: bool },
 
-    #[serde(rename = "type")]
-    pub type_: String,
-
-    pub reference_nit: Option<ReferenceUnit>,
-
-    pub reference_value: Option<RecipeStepCapabilitySettingValueReferenceValue>,
-
-    pub value: Option<Value>,
+    #[serde(rename = "nominal")]
+    Nominal {
+        text: String,
+        reference_value: ReferenceValue,
+    },
 }
 
 #[derive(Serialize, Deserialize, Clone, PartialEq)]
 pub struct CapabilitySetting {
-    pub reference_setting: RecipeStepCapabilitySettingReferenceSetting,
-    pub value: RecipeStepCapabilitySettingValue,
+    pub reference_setting: ReferenceSetting,
+    pub value: SettingValue,
 }
 
+#[serde_with::serde_as]
 #[derive(Serialize, Deserialize, Clone, PartialEq)]
 pub struct StepCapability {
     pub phase: CapabilityPhase,
     pub reference_capability: ReferenceCapability,
-    pub settings: Option<Vec<CapabilitySetting>>,
+
+    #[serde_as(deserialize_as = "serde_with::DefaultOnNull")]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub settings: Vec<CapabilitySetting>,
 }
 
 #[derive(Serialize, Deserialize, Clone, PartialEq)]
@@ -130,10 +169,15 @@ pub struct StepIngredient {
     pub quantity: Quantity,
 }
 
+#[serde_with::serde_as]
 #[derive(Serialize, Deserialize, Clone, PartialEq)]
 pub struct RecipeStep {
     pub capability: Option<StepCapability>,
-    pub ingredients: Option<Vec<StepIngredient>>,
+
+    #[serde_as(deserialize_as = "serde_with::DefaultOnNull")]
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub ingredients: Vec<StepIngredient>,
+
     pub source_text: Option<String>,
     pub text: String,
 }

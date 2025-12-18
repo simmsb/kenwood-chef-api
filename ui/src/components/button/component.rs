@@ -25,6 +25,7 @@ impl ButtonVariant {
 
 #[component]
 pub fn Button(
+    #[props(default)] class: String,
     #[props(default)] variant: ButtonVariant,
     #[props(extends=GlobalAttributes)]
     #[props(extends=button)]
@@ -38,7 +39,7 @@ pub fn Button(
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
 
         button {
-            class: "button",
+            class: "{class} button",
             "data-style": variant.class(),
             onclick: move |event| {
                 if let Some(f) = &onclick {

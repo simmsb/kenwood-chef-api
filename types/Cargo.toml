@@ -8,3 +8,5 @@ chrono = { workspace = true } #unified
 jiff = { workspace = true } #unified
 serde = { workspace = true } #unified
 serde_json = { workspace = true } #unified
+serde_with = "3.16.1"
+strum = { version = "0.27.2", features = ["derive"] }

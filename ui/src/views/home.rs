@@ -38,6 +38,14 @@ pub fn Home() -> Element {
     }
 }
 
+struct AlternateDisplay<T>(pub T);
+
+impl<T: core::fmt::Display + core::fmt::Debug> core::fmt::Display for AlternateDisplay<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self.0)
+    }
+}
+
 #[server]
 async fn recipes_server(offset: Option<u64>, limit: Option<u64>) -> Result<Vec<types::Recipe>> {
     use dioxus::{
@@ -48,7 +56,8 @@ async fn recipes_server(offset: Option<u64>, limit: Option<u64>) -> Result<Vec<t
     let recipes = db::queries::recipes::list_recipes(crate::db::db(), offset, limit)
         .instrument(info_span!("Loading recipes"))
         .await
-        .map_err(|e| CapturedError::from_boxed(e.into()))?;
+        // .map_err(|e| CapturedError::from_boxed(e.into()))?;
+        .map_err(|e| CapturedError::from_display(AlternateDisplay(e)))?;
 
     Ok(recipes)
 }

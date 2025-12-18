@@ -11,8 +11,13 @@ db = { workspace = true, optional = true } #unified
 dioxus = { version = "0.7.2", features = ["router", "fullstack"] }
 dioxus-primitives = { git = "https://github.com/DioxusLabs/components", version = "0.0.1", default-features = false, features = ["router"] }
 dioxus-query = "0.9.0"
+dioxus-sdk = { version = "0.7.0", features = ["time"] }
+english = "0.1.3"
+itertools = "0.14.0"
 jiff = { workspace = true } #unified
+nucleo-matcher = "0.3.1"
 sea-orm = { version = "^2.0.0-rc", features = ["sqlx-sqlite", "macros", "runtime-tokio-rustls", "with-json"], optional = true }
+serde_json.workspace = true
 tokio = { workspace = true, optional = true } #unified
 tracing = { workspace = true } #unified
 types = { workspace = true } #unified

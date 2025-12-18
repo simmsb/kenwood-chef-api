@@ -2,6 +2,8 @@ use dioxus::prelude::*;
 
 #[component]
 pub fn Input(
+    #[props(default)]
+    class: String,
     oninput: Option<EventHandler<FormEvent>>,
     onchange: Option<EventHandler<FormEvent>>,
     oninvalid: Option<EventHandler<FormEvent>>,
@@ -20,6 +22,7 @@ pub fn Input(
     oncopy: Option<EventHandler<ClipboardEvent>>,
     oncut: Option<EventHandler<ClipboardEvent>>,
     onpaste: Option<EventHandler<ClipboardEvent>>,
+    onmounted: Option<EventHandler<MountedEvent>>,
     #[props(extends=GlobalAttributes)]
     #[props(extends=input)]
     attributes: Vec<Attribute>,
@@ -28,7 +31,7 @@ pub fn Input(
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
         input {
-            class: "input",
+            class: "{class} input",
             oninput: move |e| _ = oninput.map(|callback| callback(e)),
             onchange: move |e| _ = onchange.map(|callback| callback(e)),
             oninvalid: move |e| _ = oninvalid.map(|callback| callback(e)),
@@ -47,6 +50,7 @@ pub fn Input(
             oncopy: move |e| _ = oncopy.map(|callback| callback(e)),
             oncut: move |e| _ = oncut.map(|callback| callback(e)),
             onpaste: move |e| _ = onpaste.map(|callback| callback(e)),
+            onmounted: move |e| _ = onmounted.map(|callback| callback(e)),
             ..attributes,
             {children}
         }

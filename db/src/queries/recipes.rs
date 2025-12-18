@@ -1,4 +1,5 @@
 use color_eyre::eyre::OptionExt as _;
+use color_eyre::eyre::WrapErr as _;
 use color_eyre::eyre::eyre;
 use sea_orm::DatabaseConnection;
 use sea_orm::EntityLoaderTrait;
@@ -40,8 +41,11 @@ pub async fn list_recipes(
                 description: r.description,
                 etag: r.e_tag,
                 forked_into_other_locales: Vec::new(),
+                // ingredients: serde_json::from_value(r.ingredients)?,
+                ingredients: serde_path_to_error::deserialize(r.ingredients).with_context(|| format!("Deserializing ingredients of {}", r.id))?,
+                // steps: serde_json::from_value(r.steps)?,
+                steps: serde_path_to_error::deserialize(r.steps).with_context(|| format!("Deserializing steps of {}", r.id))?,
                 id: r.id,
-                ingredients: serde_json::from_value(r.ingredients)?,
                 locale: r.locale,
                 modified_at: r.modified_at,
                 name: r.name,
@@ -50,7 +54,6 @@ pub async fn list_recipes(
                 reference_tags: Vec::new(),
                 serves: r.serves as u8,
                 state: "published".to_owned(),
-                steps: serde_json::from_value(r.steps)?,
                 total_time: r
                     .total_time
                     .parse::<jiff::Span>()
@@ -99,7 +102,8 @@ pub async fn get_recipe(db: &DatabaseConnection, id: &str) -> color_eyre::Result
         etag: r.e_tag,
         forked_into_other_locales: Vec::new(),
         id: r.id,
-        ingredients: serde_json::from_value(r.ingredients)?,
+        // ingredients: serde_json::from_value(r.ingredients)?,
+        ingredients: serde_path_to_error::deserialize(r.ingredients).context("Deserializing ingredients")?,
         locale: r.locale,
         modified_at: r.modified_at,
         name: r.name,
@@ -108,7 +112,8 @@ pub async fn get_recipe(db: &DatabaseConnection, id: &str) -> color_eyre::Result
         reference_tags: Vec::new(),
         serves: r.serves as u8,
         state: "published".to_owned(),
-        steps: serde_json::from_value(r.steps)?,
+        // steps: serde_json::from_value(r.steps)?,
+        steps: serde_path_to_error::deserialize(r.steps).context("Deserializing steps")?,
         total_time: r
             .total_time
             .parse::<jiff::Span>()
