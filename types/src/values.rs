@@ -1,6 +1,6 @@
 use crate::{
     CapabilityPhase, CapabilitySetting, ReferenceCapability, ReferenceSetting, ReferenceSettingId,
-    ReferenceValue, SettingValue,
+    ReferenceUnit, ReferenceValue, SettingValue,
 };
 
 pub trait KnownOptions
@@ -8,6 +8,16 @@ where
     Self: Sized,
 {
     fn known_options() -> Vec<Self>;
+}
+
+impl CapabilityPhase {
+    pub fn setup() -> Self {
+        CapabilityPhase {
+            id: "cckg:SetUpPhase".to_owned(),
+            name: "set up".to_owned(),
+            can_follow_phases: vec!["cckg:PreheatInitializationPhase".to_owned()],
+        }
+    }
 }
 
 impl KnownOptions for CapabilityPhase {
@@ -48,6 +58,15 @@ impl KnownOptions for CapabilityPhase {
                 ],
             },
         ]
+    }
+}
+
+impl ReferenceCapability {
+    pub fn bake() -> Self {
+        ReferenceCapability {
+            id: "cckg:Bake".to_owned(),
+            name: "bake".to_owned(),
+        }
     }
 }
 
@@ -375,6 +394,16 @@ impl ReferenceSettingId {
                 ReferenceSettingId::Time => "Time",
             }
             .to_owned(),
+        }
+    }
+}
+
+impl ReferenceUnit {
+    pub fn celcius() -> Self {
+        Self {
+            id: "cckg:Celsius".to_owned(),
+            name: "Celcius".to_owned(),
+            abbreviation: "°C".to_owned(),
         }
     }
 }

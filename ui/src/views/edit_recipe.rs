@@ -14,7 +14,8 @@ use crate::components::{
 };
 use dioxus::prelude::*;
 use dioxus_primitives::checkbox::CheckboxState;
-use itertools::Itertools as _;
+use itertools::Itertools;
+use types::traits::*;
 use types::KnownOptions;
 
 #[component]
@@ -62,26 +63,11 @@ fn PreparationSelector(
 }
 
 #[component]
-fn Ingredient(
-    ingredient: WriteSignal<types::RecipeIngredient>,
-    ingredients_matcher: Memo<FuzzyFinder<types::Ingredient>>,
-    preparations_matcher: Memo<FuzzyFinder<types::ReferencePreparation>>,
+fn Quantity(
+    quantity: Store<types::Quantity>,
+    allowed_units: Memo<Vec<types::IngredientAllowedUnit>>,
 ) -> Element {
-    let ingredient_search_input = use_signal(|| String::new());
     let unit_search_input = use_signal(|| String::new());
-
-    let matching_ingredients = use_memo(move || {
-        ingredients_matcher
-            .write()
-            .search(ingredient_search_input().as_str(), 10)
-            .into_iter()
-            .cloned()
-            .collect_vec()
-    });
-
-    let allowed_units = use_loader(move || {
-        allowed_units_server(ingredient.read().reference_ingredient.id.clone())
-    })?;
     let mut units_matcher = use_memo(move || {
         FuzzyFinder::new(allowed_units.iter().map(|i| (i.name.clone(), i.clone())))
     });
@@ -95,22 +81,93 @@ fn Ingredient(
             .collect_vec()
     });
 
-    let amount = use_memo(move || ingredient().quantity.amount);
-    let reference_unit = use_memo(move || ingredient().quantity.reference_unit);
+    let reference_unit = quantity.reference_unit();
 
     use_effect(move || {
-        if let Some(amount) = amount() {
-            let abbr = reference_unit().abbreviation;
+        if let Some(amount) = *quantity.amount().read() {
+            let abbr = reference_unit.abbreviation().read().clone();
             let abbr = if abbr.trim().is_empty() {
                 english::Noun::count(reference_unit().name, amount as u32)
             } else {
                 abbr
             };
-            ingredient.write().quantity.text = format!("{amount} {abbr}",);
+            quantity.write().text = format!("{amount} {abbr}",);
         } else {
-            ingredient.write().quantity.text = reference_unit().abbreviation;
+            quantity.write().text = reference_unit().abbreviation;
         }
     });
+
+    rsx! {
+        Label { html_for: "quantity", "Quantity ({quantity().text})" }
+        div { class: "flex flex-col sm:flex-row sm:items-center gap-4",
+
+              SearchingSelect::<types::IngredientAllowedUnit> {
+                  name: "quantity",
+                  placeholder: "{quantity().reference_unit.name}",
+                  typeahead_buffer: unit_search_input,
+                  on_value_change: move |v: Option<types::IngredientAllowedUnit>| {
+                      if let Some(v) = v {
+                          quantity.write().reference_unit = v.as_reference_unit();
+                      }
+                  },
+
+                  SelectTrigger { SelectValue {} }
+
+                  SelectList {
+                      for (idx , unit) in matching_units().iter().enumerate() {
+                          SelectOption::<types::IngredientAllowedUnit> {
+                              index: idx,
+                              value: unit.clone(),
+                              text_value: unit.name.clone(),
+
+                              if let Some(abbreviation) = unit.abbreviation.clone() {
+                                  "{unit.name} ({abbreviation})"
+                              } else {
+                                  "{unit.name}"
+                              }
+
+                              SelectItemIndicator {}
+                          }
+                      }
+                  }
+              }
+
+              Input {
+                  r#type: "number",
+                  min: 0,
+                  value: quantity().amount,
+                  oninput: move |e: FormEvent| {
+                      if let Ok(t) = e.value().parse::<f64>() {
+                          quantity.write().amount = Some(t);
+                      }
+                  },
+              }
+
+              span { "{quantity().reference_unit.abbreviation}" }
+        }
+    }
+}
+
+#[component]
+fn Ingredient(
+    ingredient: Store<types::RecipeIngredient>,
+    ingredients_matcher: Memo<FuzzyFinder<types::Ingredient>>,
+    preparations_matcher: Memo<FuzzyFinder<types::ReferencePreparation>>,
+) -> Element {
+    let ingredient_search_input = use_signal(|| String::new());
+
+    let matching_ingredients = use_memo(move || {
+        ingredients_matcher
+            .write()
+            .search(ingredient_search_input().as_str(), 10)
+            .into_iter()
+            .cloned()
+            .collect_vec()
+    });
+
+    let reference_unit_id = ingredient.reference_ingredient().id();
+    let allowed_units = use_loader(move || allowed_units_server(reference_unit_id()))?;
+    let allowed_units = use_memo(move || allowed_units());
 
     rsx! {
         Card {
@@ -124,7 +181,7 @@ fn Ingredient(
                                 typeahead_buffer: ingredient_search_input,
                                 on_value_change: move |v| {
                                     if let Some(v) = v {
-                                        ingredient.write().reference_ingredient = v;
+                                        ingredient.reference_ingredient().set(v);
                                     }
                                 },
 
@@ -150,9 +207,9 @@ fn Ingredient(
                     div { class: "flex flex-col gap-4",
                         Label { html_for: "description", "Description" }
                         Input {
-                            value: ingredient.read().source_text.clone().unwrap_or_else(String::new),
+                            value: ingredient.source_text().read().clone().unwrap_or_else(String::new),
                             oninput: move |e: FormEvent| {
-                                ingredient.write().source_text = Some(e.value());
+                                ingredient.source_text().set(Some(e.value()));
                             },
                         }
                     }
@@ -161,76 +218,29 @@ fn Ingredient(
 
             CardContent { class: "flex flex-col gap-4 justify-center",
 
-                Label { html_for: "quantity", "Quantity ({ingredient.read().quantity.text.clone()})" }
-                div { class: "flex flex-col sm:flex-row sm:items-center gap-4",
-
-                    SearchingSelect::<types::IngredientAllowedUnit> {
-                        name: "quantity",
-                        placeholder: "{ingredient.read().quantity.reference_unit.name}",
-                        typeahead_buffer: unit_search_input,
-                        on_value_change: move |v: Option<types::IngredientAllowedUnit>| {
-                            if let Some(v) = v {
-                                ingredient.write().quantity.reference_unit = v.as_reference_unit();
-                            }
-                        },
-
-                        SelectTrigger { SelectValue {} }
-
-                        SelectList {
-                            for (idx , unit) in matching_units().iter().enumerate() {
-                                SelectOption::<types::IngredientAllowedUnit> {
-                                    index: idx,
-                                    value: unit.clone(),
-                                    text_value: unit.name.clone(),
-
-                                    if let Some(abbreviation) = unit.abbreviation.clone() {
-                                        "{unit.name} ({abbreviation})"
-                                    } else {
-                                        "{unit.name}"
-                                    }
-
-                                    SelectItemIndicator {}
-                                }
-                            }
-                        }
-                    }
-
-                    Input {
-                        r#type: "number",
-                        min: 0,
-                        value: ingredient.read().quantity.amount,
-                        oninput: move |e: FormEvent| {
-                            if let Ok(t) = e.value().parse::<f64>() {
-                                ingredient.write().quantity.amount = Some(t);
-                            }
-                        },
-                    }
-
-                    span { "{ingredient.read().quantity.reference_unit.abbreviation}" }
+                Quantity {
+                    quantity: ingredient.quantity(),
+                    allowed_units
                 }
 
                 Label { html_for: "preparations", "Preparations" }
                 div { class: "flex flex-col justify-start gap-4",
 
-                    for idx in 0..ingredient().reference_preparations.len() {
+                    for (idx, preparation) in ingredient.reference_preparations().iter().enumerate() {
                         div { class: "flex flex-row gap-4",
 
                             Button {
                                 variant: ButtonVariant::Outline,
 
                                 onclick: move |_| {
-                                    ingredient.write().reference_preparations.remove(idx);
+                                    ingredient.reference_preparations().remove(idx);
                                 },
 
                                 "X"
                             }
 
                             PreparationSelector {
-                                preparation: ingredient
-                                    .map_mut(
-                                        move |r| &r.reference_preparations[idx],
-                                        move |r| &mut r.reference_preparations[idx],
-                                    ),
+                                preparation,
                                 preparations_matcher,
                             }
                         }
@@ -241,10 +251,7 @@ fn Ingredient(
                         variant: ButtonVariant::Secondary,
                         onclick: move |_| {
                             ingredient
-                                .with_mut(|i| {
-                                    let prep = preparations_matcher().corpus.first().unwrap().1.clone();
-                                    i.reference_preparations.push(prep);
-                                })
+                                .reference_preparations().push(preparations_matcher().corpus.first().unwrap().1.clone());
                         },
 
                         "Add preparation"
@@ -289,6 +296,131 @@ fn KeepWarmSettingSelector(setting: WriteSignal<types::CapabilitySetting>) -> El
 }
 
 #[component]
+fn TemperatureSettingSelector(setting: WriteSignal<types::CapabilitySetting>) -> Element {
+    let value = use_memo(move || match setting().value {
+        types::SettingValue::Numeric { value, .. } => Some(value),
+        types::SettingValue::Nominal { .. } => Some(0.0),
+        _ => None,
+    });
+
+    rsx! {
+        div { class: "flex flex-row gap-4",
+
+              Label { html_for: "temperature", "Temperature" }
+              div { class: "flex flex-row items-center gap-4",
+
+                    Input {
+                        id: "recipe_prep_time",
+                        r#type: "number",
+                        min: 0,
+                        max: 200,
+                        value: value().map(|x| x.to_string()).unwrap_or_else(|| "Enter temperature".to_owned()),
+                        oninput: move |e: FormEvent| {
+                            if let Ok(t) = e.value().parse::<f64>() {
+                                setting.write().value = if t < 0.01 {
+                                    types::SettingValue::Nominal { text: "No temperature".to_owned(), reference_value: types::ReferenceValue::temperature_off() }
+                                } else {
+                                    types::SettingValue::Numeric {
+                                        reference_unit: Some(types::ReferenceUnit::celcius()),
+                                        text: format!("{t:.2} °C"),
+                                        value: t
+                                    }
+                                }
+                            }
+                        },
+                    }
+                    span { "Seconds" }
+              }
+
+        }
+    }
+}
+
+#[component]
+fn SpeedSettingSelector(setting: WriteSignal<types::CapabilitySetting>) -> Element {
+    let value = use_memo(move || match setting().value {
+        types::SettingValue::Nominal {
+            reference_value, ..
+        } => Some(reference_value),
+        _ => None,
+    });
+
+    rsx! {
+        div { class: "flex flex-row gap-4",
+
+              Label { html_for: "speed", "Speed" }
+                select::Select::<types::ReferenceValue> {
+                    value: Some(value()),
+                    on_value_change: move |v: Option<types::ReferenceValue>| {
+                        if let Some(v) = v {
+                            setting.write().value = types::SettingValue::Nominal {
+                                text: v.name.clone(),
+                                reference_value: v
+                            };
+                        }
+                    },
+
+                    select::SelectTrigger { select::SelectValue {} }
+
+                    select::SelectList {
+                        for (idx, value) in types::ReferenceValue::stir_settings().into_iter().enumerate() {
+                            select::SelectOption::<types::ReferenceValue> {
+                                index: idx,
+                                value: value.clone(),
+                                text_value: value.name.clone(),
+
+                                "{value.name}"
+                            }
+                        }
+                    }
+                }
+
+        }
+    }
+}
+
+#[component]
+fn TimeSettingSelector(setting: WriteSignal<types::CapabilitySetting>) -> Element {
+    let value = use_memo(move || match setting().value {
+        types::SettingValue::Numeric { value, .. } => {
+            jiff::Span::try_from(jiff::SignedDuration::from_secs_f64(value))
+                .ok()
+                .map(|x| x.fieldwise())
+        }
+        _ => None,
+    });
+
+    let unwrapped_value =
+        use_memo(move || value().unwrap_or_else(|| jiff::Span::new().fieldwise()));
+
+    let set = use_callback(move |span: jiff::Span| {
+        setting.write().value = types::SettingValue::Numeric {
+            text: format!("{span:#}"),
+            value: span.total(jiff::Unit::Second).unwrap_or(0.0),
+            reference_unit: None,
+        }
+    });
+
+    rsx! {
+        div { class: "flex flex-row gap-4",
+
+              Label { html_for: "time", "Time" }
+              div {
+                  class: "flex flex-row gap-4 items-center",
+
+                  Input {
+                      oninput: move |e: FormEvent| {
+                          if let Ok(t) = e.value().parse::<i64>() {
+                              set(unwrapped_value().0.hours(t));
+                          }
+                      }
+                  }
+              }
+        }
+    }
+}
+
+#[component]
 fn SettingsSelector(setting: WriteSignal<types::CapabilitySetting>) -> Element {
     let type_ = setting().reference_setting.id;
     let type_str = use_memo(move || Some(setting().reference_setting.id.to_string()));
@@ -326,19 +458,29 @@ fn SettingsSelector(setting: WriteSignal<types::CapabilitySetting>) -> Element {
             }
         }
 
-
+        match type_ {
+            types::ReferenceSettingId::KeepWarm =>
+                rsx! { KeepWarmSettingSelector { setting } },
+            types::ReferenceSettingId::Temperature =>
+                rsx! { TemperatureSettingSelector { setting } },
+            types::ReferenceSettingId::Speed =>
+                rsx! { SpeedSettingSelector { setting } },
+            types::ReferenceSettingId::Time =>
+                rsx! { TimeSettingSelector { setting } },
+        }
     }
 }
 
 #[component]
-fn StepCapability(capability: WriteSignal<types::StepCapability>) -> Element {
+fn StepCapability(capability: Store<types::StepCapability>) -> Element {
     rsx! {
         Card {
             CardContent { class: "flex flex-col gap-4 justify-center",
 
                 Label { html_for: "phase", "Phase" }
                 select::Select::<types::CapabilityPhase> {
-                    placeholder: capability().phase.name.clone(),
+                    // placeholder: capability().phase.name.clone(),
+                    value: Some(Some(capability().phase)),
                     on_value_change: move |v| {
                         if let Some(v) = v {
                             capability.write().phase = v;
@@ -363,7 +505,8 @@ fn StepCapability(capability: WriteSignal<types::StepCapability>) -> Element {
 
                 Label { html_for: "capability", "Capability" }
                 select::Select::<types::ReferenceCapability> {
-                    placeholder: capability().reference_capability.name.clone(),
+                    // placeholder: capability().reference_capability.name.clone(),
+                    value: Some(Some(capability().reference_capability)),
                     on_value_change: move |v| {
                         if let Some(v) = v {
                             capability.write().reference_capability = v;
@@ -424,218 +567,237 @@ fn StepCapability(capability: WriteSignal<types::StepCapability>) -> Element {
     }
 }
 
-// #[component]
-// fn Step(
-//     step: WriteSignal<types::RecipeStep>,
-//     ingredients_matcher: Memo<FuzzyFinder<types::Ingredient>>,
-//     preparations_matcher: Memo<FuzzyFinder<types::ReferencePreparation>>,
-// ) -> Element {
-//     let ingredient_search_input = use_signal(|| String::new());
-//     let unit_search_input = use_signal(|| String::new());
+#[component]
+fn StepIngredient(
+    ingredients: Store<Vec<types::RecipeIngredient>>,
+    ingredient: Store<types::StepIngredient>,
+) -> Element {
+    // signal that tracks the ingredient, used to move the ingredient_idx when
+    // the list changes
+    let mut recipe_ingredient = use_signal(move || {
+        ingredients
+            .get(ingredient.ingredient_idx().read().clone() as usize)
+            .map(|x| x.read().clone())
+    });
 
-//     let matching_ingredients = use_memo(move || {
-//         ingredients_matcher
-//             .write()
-//             .search(ingredient_search_input().as_str(), 10)
-//             .into_iter()
-//             .cloned()
-//             .collect_vec()
-//     });
+    let current_ingredient = use_memo(move || {
+        ingredients
+            .get(ingredient.ingredient_idx().read().clone() as usize)
+            .map(|x| x.read().clone())
+    });
 
-//     let allowed_units = use_loader(move || {
-//         allowed_units_server(ingredient.read().reference_ingredient.id.clone())
-//     })?;
-//     let mut units_matcher = use_memo(move || {
-//         FuzzyFinder::new(allowed_units.iter().map(|i| (i.name.clone(), i.clone())))
-//     });
+    use_effect(move || {
+        let Some(recipe_ingredient_) = recipe_ingredient() else {
+            return;
+        };
+        let Some(current_ingredient_) = current_ingredient() else {
+            return;
+        };
 
-//     let matching_units = use_memo(move || {
-//         units_matcher
-//             .write()
-//             .search(unit_search_input().as_str(), 10)
-//             .into_iter()
-//             .cloned()
-//             .collect_vec()
-//     });
+        // if the recipe positions changed, try to reconcile
+        if recipe_ingredient_.reference_ingredient.id != current_ingredient_.reference_ingredient.id
+        {
+            if let Some((new_index, _)) = ingredients().iter().find_position(|i| {
+                i.reference_ingredient.id == recipe_ingredient_.reference_ingredient.id
+            }) {
+                ingredient.write().ingredient_idx = new_index as u8;
+            }
 
-//     let amount = use_memo(move || ingredient().quantity.amount);
-//     let reference_unit = use_memo(move || ingredient().quantity.reference_unit);
+            recipe_ingredient.set(Some(current_ingredient_));
+        }
+    });
 
-//     use_effect(move || {
-//         if let Some(amount) = amount() {
-//             let abbr = reference_unit().abbreviation;
-//             let abbr = if abbr.trim().is_empty() {
-//                 english::Noun::count(reference_unit().name, amount as u32)
-//             } else {
-//                 abbr
-//             };
-//             ingredient.write().quantity.text = format!("{amount} {abbr}",);
-//         } else {
-//             ingredient.write().quantity.text = reference_unit().abbreviation;
-//         }
-//     });
+    let reference_unit_id =
+        use_memo(move || current_ingredient().map(|x| x.reference_ingredient.id.clone()));
+    let allowed_units = use_loader(move || {
+        let ref_unit_id = reference_unit_id();
+        async {
+            if let Some(ref_unit_id) = ref_unit_id {
+                allowed_units_server(ref_unit_id).await
+            } else {
+                Ok(vec![])
+            }
+        }
+    })?;
+    let allowed_units = use_memo(move || allowed_units());
 
-//     rsx! {
-//         Card {
-//             CardHeader {
-//                 div {
-//                     class: "flex flex-row items-center gap-4",
-//                     CardTitle {
-//                         div {
-//                             class: "flex flex-col gap-4",
-//                         Label { html_for: "ingredient", "Name" }
-//                         SearchingSelect<types::Ingredient> {
-//                             placeholder: "{ingredient.read().reference_ingredient.name}",
-//                             typeahead_buffer: ingredient_search_input,
-//                             on_value_change: move |v| {
-//                                 if let Some(v) = v {
-//                                     ingredient.write().reference_ingredient = v;
-//                                 }
-//                             },
+    let using_custom_quantity = use_memo(move || {
+        let Some(current_ingredient_) = current_ingredient() else {
+            return CheckboxState::Indeterminate;
+        };
+        if ingredient().quantity == current_ingredient_.quantity {
+            CheckboxState::Unchecked
+        } else {
+            CheckboxState::Checked
+        }
+    });
 
-//                             SelectTrigger {
-//                                 SelectValue {}
-//                             }
+    let mut force_show_quantity = use_signal(|| false);
+    let show_quantity = use_memo(move || force_show_quantity() || using_custom_quantity().into());
 
-//                             SelectList {
-//                                 for (idx, ingredient) in matching_ingredients().iter().enumerate() {
-//                                     SelectOption::<types::Ingredient> {
-//                                         index: idx,
-//                                         value: ingredient.clone(),
-//                                         text_value: ingredient.name.clone(),
+    rsx! {
+        Card {
+            CardHeader {
+                div { class: "flex flex-row items-center gap-4",
+                    CardTitle {
+                        div { class: "flex flex-col gap-4",
+                            Label { html_for: "ingredient", "Name" }
+                            select::Select::<u8> {
+                                value: Some(ingredient().ingredient_idx),
+                                on_value_change: move |v| {
+                                    if let Some(v) = v {
+                                        ingredient.write().ingredient_idx = v;
+                                    }
+                                },
 
-//                                         "{ingredient.name}"
+                                select::SelectTrigger { select::SelectValue {} }
 
-//                                             SelectItemIndicator { }
-//                                     }
-//                                 }
-//                             }
-//                         }
-//                         }
-//                     }
+                                select::SelectList {
+                                    for (idx, ingredient) in ingredients().iter().enumerate() {
+                                        select::SelectOption::<u8> {
+                                            index: idx,
+                                            value: idx as u8,
+                                            text_value: ingredient.reference_ingredient.name.clone(),
 
-//                     div {
-//                         class: "flex flex-col gap-4",
-//                         Label { html_for: "description", "Description" }
-//                         Input {
-//                             value: ingredient.read().source_text.clone().unwrap_or_else(String::new),
-//                             oninput: move |e: FormEvent| {
-//                                 ingredient.write().source_text = Some(e.value());
-//                             }
-//                         }
-//                     }
-//                 }
-//             }
+                                            "{ingredient.reference_ingredient.name}"
 
-//             CardContent {
-//                 class: "flex flex-col gap-4 justify-center",
+                                            SelectItemIndicator {}
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
 
-//                 Label { html_for: "capability", "Capability" }
-//                 div {
-//                     class: "flex flex-col sm:flex-row sm:items-center gap-4",
+            CardContent {
+                class: "flex flex-col gap-4 justify-center",
 
-//                     SearchingSelect<Option<types::StepCapability>> {
-//                         name: "capability",
-//                         placeholder: step().capability.map_or_else(),
-//                         typeahead_buffer: unit_search_input,
-//                         on_value_change: move |v: Option<types::IngredientAllowedUnit>| {
-//                             if let Some(v) = v {
-//                                 ingredient.write().quantity.reference_unit = v.as_reference_unit();
-//                             }
-//                         },
+                Label { html_for: "use_custom_quantity", "Use custom quantity" },
+                Checkbox {
+                    name: "use_custom_quantity",
+                    default_checked: using_custom_quantity(),
 
-//                         SelectTrigger {
-//                             SelectValue {}
-//                         }
+                    on_checked_change: move |e: CheckboxState| {
+                        let checked: bool = e.into();
 
-//                         SelectList {
-//                             for (idx, unit) in matching_units().iter().enumerate() {
-//                                 SelectOption::<types::IngredientAllowedUnit> {
-//                                     index: idx,
-//                                     value: unit.clone(),
-//                                     text_value: unit.name.clone(),
+                        if checked {
+                            force_show_quantity.set(true);
+                        } else {
+                            force_show_quantity.set(false);
+                            if let Some(current_ingredient_) = current_ingredient() {
+                                ingredient.write().quantity = current_ingredient_.quantity;
+                            }
+                        }
+                    }
+                }
 
-//                                     if let Some(abbreviation) = unit.abbreviation.clone() {
-//                                         "{unit.name} ({abbreviation})"
-//                                     } else {
-//                                         "{unit.name}"
-//                                     }
+                if show_quantity() {
+                    Quantity {
+                        quantity: ingredient.quantity(),
+                        allowed_units
+                    }
+                }
+            }
+        }
+    }
+}
 
-//                                     SelectItemIndicator { }
-//                                 }
-//                             }
-//                         }
-//                     }
+#[component]
+fn Step(
+    idx: usize,
+    step: Store<types::RecipeStep>,
+    ingredients: Store<Vec<types::RecipeIngredient>>,
+    // ingredients_matcher: Memo<FuzzyFinder<types::Ingredient>>,
+    // preparations_matcher: Memo<FuzzyFinder<types::ReferencePreparation>>,
+) -> Element {
+    // let ingredient_search_input = use_signal(|| String::new());
+    // let unit_search_input = use_signal(|| String::new());
+    rsx! {
+        Card {
+            CardHeader {
+                "Step {idx}"
+            }
 
-//                     Input {
-//                         r#type: "number",
-//                         min: 0,
-//                         value: ingredient.read().quantity.amount,
-//                         oninput: move |e: FormEvent| {
-//                             if let Ok(t) = e.value().parse::<f64>() {
-//                                 ingredient.write().quantity.amount = Some(t);
-//                             }
-//                         }
-//                     }
+            CardContent {
+                class: "flex flex-col gap-4 justify-center",
 
-//                     span {
-//                         "{ingredient.read().quantity.reference_unit.abbreviation}"
-//                     }
-//                 }
+                Label { html_for: "capability", "Capability" }
+                if let Some(capability) = step.capability().transpose() {
+                    StepCapability {
+                        capability
+                    }
 
-//                 Label { html_for: "preparations", "Preparations" }
-//                 div {
-//                     class: "flex flex-col justify-start gap-4",
+                    Button {
+                        class: "sm:max-w-1/2",
+                        variant: ButtonVariant::Destructive,
+                        onclick: move |_| {
+                            step.capability().set(None)
+                        },
 
-//                     for reference_preparation in ingredient.map_mut(
-//                         move |r| &r.reference_preparations,
-//                         move |r| &mut r.reference_preparations
-//                     ).iter_mut() {
-//                             div {
-//                                 class: "flex flex-row gap-4",
+                        "Remove capability"
+                    }
+                } else {
+                    Button {
+                        class: "sm:max-w-1/2",
+                        variant: ButtonVariant::Secondary,
+                        onclick: move |_| {
+                            step.capability().set(Some(types::StepCapability {
+                                phase: types::CapabilityPhase::setup(),
+                                reference_capability: types::ReferenceCapability::bake(),
+                                settings: vec![]
+                            }))
+                        },
 
-//                                 Button {
-//                                     variant: ButtonVariant::Outline,
+                        "Add capability"
+                    }
+                }
 
-//                                     onclick: move |_| {
-//                                         ingredient.write().reference_preparations.as_mut().unwrap().remove(idx);
-//                                     },
+                Label { html_for: "preparations", "Preparations" }
+                div {
+                    class: "flex flex-col justify-start gap-4",
 
-//                                     "X"
-//                                 }
+                    for ingredient in step.ingredients().iter() {
+                            div {
+                                class: "flex flex-row gap-4",
 
-//                                 PreparationSelector {
-//                                     preparation: ingredient.map_mut(
-//                                         move |r| &r.reference_preparations.as_ref().unwrap()[idx],
-//                                         move |r| &mut r.reference_preparations.as_mut().unwrap()[idx],
-//                                     ),
-//                                     preparations_matcher,
-//                                 }
-//                             }
-//                         }
+                                Button {
+                                    variant: ButtonVariant::Outline,
 
-//                     Button {
-//                         class: "sm:max-w-1/2",
-//                         variant: ButtonVariant::Secondary,
-//                         onclick: move |_| {
-//                             ingredient.with_mut(|i| {
-//                                 let prep = preparations_matcher().corpus.first().unwrap().1.clone();
-//                                 i.reference_preparations.push(prpe)
-//                                 if let Some(preps) = .as_mut() {
-//                                     preps.push(prep);
-//                                 } else {
-//                                     i.reference_preparations = Some(vec![prep]);
-//                                 }
-//                             })
-//                         },
+                                    onclick: move |_| {
+                                        step.ingredients().remove(idx);
+                                    },
 
-//                         "Add preparation"
-//                     }
-//                 }
-//             }
-//         }
-//     }
-// }
+                                    "X"
+                                }
+
+                                StepIngredient {
+                                    ingredient,
+                                    ingredients
+                                }
+                            }
+                        }
+
+                    Button {
+                        class: "sm:max-w-1/2",
+                        variant: ButtonVariant::Secondary,
+                        onclick: move |_| {
+                            if let Some(first_ingredient) = ingredients.first() {
+                                step.ingredients().push(types::StepIngredient {
+                                    ingredient_idx: 0,
+                                    quantity: first_ingredient.quantity.clone(),
+                                });
+                            }
+                        },
+
+                        "Add ingredient"
+                    }
+                }
+            }
+        }
+    }
+}
 
 #[derive(Clone)]
 struct FuzzyFinder<T> {
@@ -691,7 +853,7 @@ impl<T> FuzzyFinder<T> {
 #[component]
 pub fn EditRecipe(id: String) -> Element {
     let recipe_initial = use_loader(move || recipe_server(id.clone()))?.cloned();
-    let mut recipe = use_signal(move || recipe_initial);
+    let recipe = use_store(move || recipe_initial);
 
     let ingredients = use_loader(ingredients_server)?;
     let ingredients_matcher =
@@ -710,16 +872,16 @@ pub fn EditRecipe(id: String) -> Element {
                 Label { html_for: "recipe_name", "Name" }
                 Input {
                     id: "recipe_name",
-                    value: recipe.read().name.clone(),
-                    oninput: move |e: FormEvent| recipe.write().name = e.value(),
+                    value: recipe.name().clone(),
+                    oninput: move |e: FormEvent| recipe.name().set(e.value()),
                 }
 
                 Label { html_for: "recipe_description", "Description" }
                 Textarea {
                     id: "recipe_description",
-                    placeholder: recipe.read().description.clone(),
-                    value: recipe.read().description.clone(),
-                    oninput: move |e: FormEvent| recipe.write().description = e.value(),
+                    placeholder: recipe.description().clone(),
+                    value: recipe.description().clone(),
+                    oninput: move |e: FormEvent| recipe.description().set(e.value()),
                 }
 
                 Label { html_for: "recipe_prep_time", "Prep time" }
@@ -730,14 +892,14 @@ pub fn EditRecipe(id: String) -> Element {
                         r#type: "number",
                         min: 0,
                         value: recipe
-                            .read()
-                            .prep_time
+                            .prep_time()
+                            .read().clone()
                             .map(|x| x.as_mins())
                             .map(|x| x.to_string())
                             .unwrap_or(String::new()),
                         oninput: move |e: FormEvent| {
                             if let Ok(t) = e.value().parse::<i64>() {
-                                recipe.write().prep_time = Some(jiff::SignedDuration::from_mins(t));
+                                recipe.prep_time().set(Some(jiff::SignedDuration::from_mins(t)));
                             }
                         },
                     }
@@ -752,14 +914,14 @@ pub fn EditRecipe(id: String) -> Element {
                         r#type: "number",
                         min: 0,
                         value: recipe
-                            .read()
-                            .cook_time
+                            .cook_time()
+                            .read().clone()
                             .map(|x| x.as_mins())
                             .map(|x| x.to_string())
                             .unwrap_or(String::new()),
                         oninput: move |e: FormEvent| {
                             if let Ok(t) = e.value().parse::<i64>() {
-                                recipe.write().cook_time = Some(jiff::SignedDuration::from_mins(t));
+                                recipe.cook_time().set(Some(jiff::SignedDuration::from_mins(t)));
                             }
                         },
                     }
@@ -773,10 +935,10 @@ pub fn EditRecipe(id: String) -> Element {
                         id: "recipe_serves",
                         r#type: "number",
                         min: 0,
-                        value: recipe.read().serves,
+                        value: recipe.serves(),
                         oninput: move |e: FormEvent| {
                             if let Ok(x) = e.value().parse::<u8>() {
-                                recipe.write().serves = x;
+                                recipe.serves().set(x);
                             }
                         },
                     }
@@ -793,9 +955,9 @@ pub fn EditRecipe(id: String) -> Element {
                     TabContent { index: 0usize, value: "ingredients",
                         div { class: "flex flex-col gap-4 p-4",
 
-                            for idx in 0..recipe.read().ingredients.len() {
+                            for ingredient in recipe.ingredients().iter() {
                                 Ingredient {
-                                    ingredient: recipe.map_mut(move |r| &r.ingredients[idx], move |r| &mut r.ingredients[idx]),
+                                    ingredient,
                                     ingredients_matcher,
                                     preparations_matcher,
                                 }
@@ -804,13 +966,14 @@ pub fn EditRecipe(id: String) -> Element {
                     }
 
                     TabContent { index: 1usize, value: "steps",
-                        div {
-                            width: "100%",
-                            height: "5rem",
-                            display: "flex",
-                            align_items: "center",
-                            justify_content: "center",
-                            "Tab 2 Content"
+                        div { class: "flex flex-col gap-4 p-4",
+                            for (idx, step) in recipe.steps().iter().enumerate() {
+                                Step {
+                                    idx,
+                                    step,
+                                    ingredients: recipe.ingredients()
+                                }
+                            }
                         }
                     }
                 }

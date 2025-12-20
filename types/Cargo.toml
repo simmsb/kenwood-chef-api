@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 chrono = { workspace = true } #unified
+dioxus-stores = "0.7.2"
 jiff = { workspace = true } #unified
 serde = { workspace = true } #unified
 serde_json = { workspace = true } #unified

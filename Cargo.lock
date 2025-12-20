@@ -8261,6 +8261,7 @@ name = "types"
 version = "0.1.0"
 dependencies = [
  "chrono",
+ "dioxus-stores",
  "jiff",
  "serde",
  "serde_json",
