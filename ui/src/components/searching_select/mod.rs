@@ -1,12 +1,12 @@
 mod component;
-mod option;
-mod utils;
-mod trigger;
-mod select;
 mod group;
 mod list;
+mod option;
+mod select;
+mod trigger;
+mod utils;
 pub use component::*;
 
-mod value;
 mod context;
 mod focus;
+mod value;

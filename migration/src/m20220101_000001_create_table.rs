@@ -111,9 +111,21 @@ impl MigrationTrait for Migration {
                     .col(string(Recipe::ETag).not_null())
                     .col(string(Recipe::OrganisationId).not_null())
                     .col(string(Recipe::Locale).not_null())
-                    .col(timestamp(Recipe::CreatedAt).not_null())
-                    .col(timestamp(Recipe::ModifiedAt).not_null())
-                    .col(timestamp(Recipe::PublishedAt).not_null())
+                    .col(
+                        timestamp(Recipe::CreatedAt)
+                            .not_null()
+                            .default(Expr::current_timestamp()),
+                    )
+                    .col(
+                        timestamp(Recipe::ModifiedAt)
+                            .not_null()
+                            .default(Expr::current_timestamp()),
+                    )
+                    .col(
+                        timestamp(Recipe::PublishedAt)
+                            .not_null()
+                            .default(Expr::current_timestamp()),
+                    )
                     .col(string(Recipe::CreatedById).not_null())
                     .col(json(Recipe::Steps).not_null())
                     .col(json(Recipe::Ingredients).not_null())
@@ -121,6 +133,20 @@ impl MigrationTrait for Migration {
                     .to_owned(),
             )
             .await?;
+
+        let db = manager.get_connection();
+
+        db.execute_unprepared(
+            "CREATE TRIGGER recipe_modified_at
+             AFTER UPDATE ON recipe
+             FOR EACH ROW
+             BEGIN
+                 UPDATE recipe
+                 SET modified_at = (datetime('now','localtime'))
+                 WHERE id = NEW.id;
+             END;",
+        )
+        .await?;
 
         Ok(())
     }

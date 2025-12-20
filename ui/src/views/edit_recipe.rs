@@ -1,5 +1,12 @@
 use core::str::FromStr;
+use rand::distr::SampleString;
 use std::string::ToString;
+
+use dioxus::prelude::*;
+use dioxus_primitives::checkbox::CheckboxState;
+use itertools::Itertools;
+use types::traits::*;
+use types::KnownOptions;
 
 use crate::components::{
     button::{Button, ButtonVariant},
@@ -12,11 +19,6 @@ use crate::components::{
     tabs::*,
     textarea::Textarea,
 };
-use dioxus::prelude::*;
-use dioxus_primitives::checkbox::CheckboxState;
-use itertools::Itertools;
-use types::traits::*;
-use types::KnownOptions;
 
 #[component]
 fn PreparationSelector(
@@ -67,6 +69,7 @@ fn Quantity(
     quantity: Store<types::Quantity>,
     allowed_units: Memo<Vec<types::IngredientAllowedUnit>>,
 ) -> Element {
+    trace!("Render quantity");
     let unit_search_input = use_signal(|| String::new());
     let mut units_matcher = use_memo(move || {
         FuzzyFinder::new(allowed_units.iter().map(|i| (i.name.clone(), i.clone())))
@@ -81,69 +84,71 @@ fn Quantity(
             .collect_vec()
     });
 
-    let reference_unit = quantity.reference_unit();
-
-    use_effect(move || {
-        if let Some(amount) = *quantity.amount().read() {
-            let abbr = reference_unit.abbreviation().read().clone();
+    let update_text = use_callback(move |()| {
+        let text = if let Some(amount) = *quantity.amount().read() {
+            let abbr = quantity.reference_unit().abbreviation().cloned();
             let abbr = if abbr.trim().is_empty() {
-                english::Noun::count(reference_unit().name, amount as u32)
+                english::Noun::count(quantity.reference_unit().name().cloned(), amount as u32)
             } else {
                 abbr
             };
-            quantity.write().text = format!("{amount} {abbr}",);
+            format!("{amount} {abbr}",)
         } else {
-            quantity.write().text = reference_unit().abbreviation;
-        }
+            quantity.reference_unit().abbreviation().cloned()
+        };
+
+        quantity.text().set(text);
     });
 
     rsx! {
-        Label { html_for: "quantity", "Quantity ({quantity().text})" }
+        Label { html_for: "quantity", "Quantity ({quantity.text()})" }
         div { class: "flex flex-col sm:flex-row sm:items-center gap-4",
 
-              SearchingSelect::<types::IngredientAllowedUnit> {
-                  name: "quantity",
-                  placeholder: "{quantity().reference_unit.name}",
-                  typeahead_buffer: unit_search_input,
-                  on_value_change: move |v: Option<types::IngredientAllowedUnit>| {
-                      if let Some(v) = v {
-                          quantity.write().reference_unit = v.as_reference_unit();
-                      }
-                  },
+            SearchingSelect::<types::IngredientAllowedUnit> {
+                name: "quantity",
+                placeholder: "{quantity.reference_unit().name()}",
+                typeahead_buffer: unit_search_input,
+                on_value_change: move |v: Option<types::IngredientAllowedUnit>| {
+                    if let Some(v) = v {
+                        quantity.reference_unit().set(v.as_reference_unit());
+                        update_text.call(());
+                    }
+                },
 
-                  SelectTrigger { SelectValue {} }
+                SelectTrigger { SelectValue {} }
 
-                  SelectList {
-                      for (idx , unit) in matching_units().iter().enumerate() {
-                          SelectOption::<types::IngredientAllowedUnit> {
-                              index: idx,
-                              value: unit.clone(),
-                              text_value: unit.name.clone(),
+                SelectList {
+                    for (idx , unit) in matching_units().iter().enumerate() {
+                        SelectOption::<types::IngredientAllowedUnit> {
+                            index: idx,
+                            value: unit.clone(),
+                            text_value: unit.name.clone(),
 
-                              if let Some(abbreviation) = unit.abbreviation.clone() {
-                                  "{unit.name} ({abbreviation})"
-                              } else {
-                                  "{unit.name}"
-                              }
+                            if let Some(abbreviation) = unit.abbreviation.clone() {
+                                "{unit.name} ({abbreviation})"
+                            } else {
+                                "{unit.name}"
+                            }
 
-                              SelectItemIndicator {}
-                          }
-                      }
-                  }
-              }
+                            SelectItemIndicator {}
+                        }
+                    }
+                }
+            }
 
-              Input {
-                  r#type: "number",
-                  min: 0,
-                  value: quantity().amount,
-                  oninput: move |e: FormEvent| {
-                      if let Ok(t) = e.value().parse::<f64>() {
-                          quantity.write().amount = Some(t);
-                      }
-                  },
-              }
+            Input {
+                r#type: "number",
+                min: 0,
+                value: quantity.amount(),
+                oninput: move |e: FormEvent| {
+                    if let Ok(t) = e.value().parse::<f64>() {
+                        quantity.amount().set(Some(t));
+                        update_text.call(());
+                    }
+                },
+            }
 
-              span { "{quantity().reference_unit.abbreviation}" }
+            span { "{quantity.reference_unit().abbreviation()}" }
         }
     }
 }
@@ -154,6 +159,7 @@ fn Ingredient(
     ingredients_matcher: Memo<FuzzyFinder<types::Ingredient>>,
     preparations_matcher: Memo<FuzzyFinder<types::ReferencePreparation>>,
 ) -> Element {
+    trace!("Render ingredient");
     let ingredient_search_input = use_signal(|| String::new());
 
     let matching_ingredients = use_memo(move || {
@@ -171,6 +177,8 @@ fn Ingredient(
 
     rsx! {
         Card {
+            class: "grow",
+
             CardHeader {
                 div { class: "flex flex-row items-center gap-4",
                     CardTitle {
@@ -207,7 +215,7 @@ fn Ingredient(
                     div { class: "flex flex-col gap-4",
                         Label { html_for: "description", "Description" }
                         Input {
-                            value: ingredient.source_text().read().clone().unwrap_or_else(String::new),
+                            value: ingredient.source_text().cloned().unwrap_or_else(String::new),
                             oninput: move |e: FormEvent| {
                                 ingredient.source_text().set(Some(e.value()));
                             },
@@ -218,18 +226,17 @@ fn Ingredient(
 
             CardContent { class: "flex flex-col gap-4 justify-center",
 
-                Quantity {
-                    quantity: ingredient.quantity(),
-                    allowed_units
-                }
+                Quantity { quantity: ingredient.quantity(), allowed_units }
 
                 Label { html_for: "preparations", "Preparations" }
                 div { class: "flex flex-col justify-start gap-4",
 
-                    for (idx, preparation) in ingredient.reference_preparations().iter().enumerate() {
+                    for (idx , preparation) in ingredient.reference_preparations().iter().enumerate() {
                         div { class: "flex flex-row gap-4",
+                            PreparationSelector { preparation, preparations_matcher }
 
                             Button {
+                                class: "place-self-end",
                                 variant: ButtonVariant::Outline,
 
                                 onclick: move |_| {
@@ -239,10 +246,6 @@ fn Ingredient(
                                 "X"
                             }
 
-                            PreparationSelector {
-                                preparation,
-                                preparations_matcher,
-                            }
                         }
                     }
 
@@ -251,7 +254,8 @@ fn Ingredient(
                         variant: ButtonVariant::Secondary,
                         onclick: move |_| {
                             ingredient
-                                .reference_preparations().push(preparations_matcher().corpus.first().unwrap().1.clone());
+                                .reference_preparations()
+                                .push(preparations_matcher().corpus.first().unwrap().1.clone());
                         },
 
                         "Add preparation"
@@ -276,21 +280,19 @@ fn KeepWarmSettingSelector(setting: WriteSignal<types::CapabilitySetting>) -> El
     });
 
     rsx! {
-        div { class: "flex flex-row gap-4",
+        Label { html_for: "keep_warm", "Keep warm?" }
 
-            span { "Keep warm?" }
+        Checkbox {
+            name: "keep_warm",
+            checked: Some(checked()),
+            on_checked_change: move |v: CheckboxState| {
+                let checked: bool = v.into();
 
-            Checkbox {
-                checked: Some(checked()),
-                on_checked_change: move |v: CheckboxState| {
-                    let checked: bool = v.into();
-
-                    setting.write().value = types::SettingValue::Boolean {
-                        text: "placeholder".to_owned(),
-                        value: checked,
-                    };
-                },
-            }
+                setting.write().value = types::SettingValue::Boolean {
+                    text: "placeholder".to_owned(),
+                    value: checked,
+                };
+            },
         }
     }
 }
@@ -304,34 +306,36 @@ fn TemperatureSettingSelector(setting: WriteSignal<types::CapabilitySetting>) ->
     });
 
     rsx! {
-        div { class: "flex flex-row gap-4",
+        div { class: "flex w-full flex-row gap-4",
 
-              Label { html_for: "temperature", "Temperature" }
-              div { class: "flex flex-row items-center gap-4",
+            Label { html_for: "temperature", "Temperature" }
+            div { class: "flex w-full flex-row items-center gap-4",
 
-                    Input {
-                        id: "recipe_prep_time",
-                        r#type: "number",
-                        min: 0,
-                        max: 200,
-                        value: value().map(|x| x.to_string()).unwrap_or_else(|| "Enter temperature".to_owned()),
-                        oninput: move |e: FormEvent| {
-                            if let Ok(t) = e.value().parse::<f64>() {
-                                setting.write().value = if t < 0.01 {
-                                    types::SettingValue::Nominal { text: "No temperature".to_owned(), reference_value: types::ReferenceValue::temperature_off() }
-                                } else {
-                                    types::SettingValue::Numeric {
-                                        reference_unit: Some(types::ReferenceUnit::celcius()),
-                                        text: format!("{t:.2} °C"),
-                                        value: t
-                                    }
+                Input {
+                    id: "recipe_prep_time",
+                    r#type: "number",
+                    min: 0,
+                    max: 200,
+                    value: value().map(|x| x.to_string()).unwrap_or_else(|| "Enter temperature".to_owned()),
+                    oninput: move |e: FormEvent| {
+                        if let Ok(t) = e.value().parse::<f64>() {
+                            setting.write().value = if t < 0.01 {
+                                types::SettingValue::Nominal {
+                                    text: "No temperature".to_owned(),
+                                    reference_value: types::ReferenceValue::temperature_off(),
                                 }
-                            }
-                        },
-                    }
-                    span { "Seconds" }
-              }
-
+                            } else {
+                                types::SettingValue::Numeric {
+                                    reference_unit: Some(types::ReferenceUnit::celcius()),
+                                    text: format!("{t:.2} °C"),
+                                    value: t,
+                                }
+                            };
+                        }
+                    },
+                }
+                span { "°C" }
+            }
         }
     }
 }
@@ -346,35 +350,34 @@ fn SpeedSettingSelector(setting: WriteSignal<types::CapabilitySetting>) -> Eleme
     });
 
     rsx! {
-        div { class: "flex flex-row gap-4",
+        div { class: "flex w-full flex-row gap-4",
 
-              Label { html_for: "speed", "Speed" }
-                select::Select::<types::ReferenceValue> {
-                    value: Some(value()),
-                    on_value_change: move |v: Option<types::ReferenceValue>| {
-                        if let Some(v) = v {
-                            setting.write().value = types::SettingValue::Nominal {
-                                text: v.name.clone(),
-                                reference_value: v
-                            };
-                        }
-                    },
+            Label { html_for: "speed", "Speed" }
+            select::Select::<types::ReferenceValue> {
+                value: Some(value()),
+                on_value_change: move |v: Option<types::ReferenceValue>| {
+                    if let Some(v) = v {
+                        setting.write().value = types::SettingValue::Nominal {
+                            text: v.name.clone(),
+                            reference_value: v,
+                        };
+                    }
+                },
 
-                    select::SelectTrigger { select::SelectValue {} }
+                select::SelectTrigger { select::SelectValue {} }
 
-                    select::SelectList {
-                        for (idx, value) in types::ReferenceValue::stir_settings().into_iter().enumerate() {
-                            select::SelectOption::<types::ReferenceValue> {
-                                index: idx,
-                                value: value.clone(),
-                                text_value: value.name.clone(),
+                select::SelectList {
+                    for (idx , value) in types::ReferenceValue::stir_settings().into_iter().enumerate() {
+                        select::SelectOption::<types::ReferenceValue> {
+                            index: idx,
+                            value: value.clone(),
+                            text_value: value.name.clone(),
 
-                                "{value.name}"
-                            }
+                            "{value.name}"
                         }
                     }
                 }
-
+            }
         }
     }
 }
@@ -385,6 +388,10 @@ fn TimeSettingSelector(setting: WriteSignal<types::CapabilitySetting>) -> Elemen
         types::SettingValue::Numeric { value, .. } => {
             jiff::Span::try_from(jiff::SignedDuration::from_secs_f64(value))
                 .ok()
+                .and_then(|x| {
+                    x.round(jiff::SpanRound::new().largest(jiff::Unit::Hour))
+                        .ok()
+                })
                 .map(|x| x.fieldwise())
         }
         _ => None,
@@ -402,127 +409,166 @@ fn TimeSettingSelector(setting: WriteSignal<types::CapabilitySetting>) -> Elemen
     });
 
     rsx! {
-        div { class: "flex flex-row gap-4",
+        div { class: "flex w-full flex-row gap-4",
 
-              Label { html_for: "time", "Time" }
-              div {
-                  class: "flex flex-row gap-4 items-center",
+            Label { html_for: "time",
+                "Time ({unwrapped_value().0.total(jiff::Unit::Second).unwrap_or(0.0)} s)"
+            }
+            div { class: "flex w-full flex-row gap-4 items-center",
 
-                  Input {
-                      oninput: move |e: FormEvent| {
-                          if let Ok(t) = e.value().parse::<i64>() {
-                              set(unwrapped_value().0.hours(t));
-                          }
-                      }
-                  }
-              }
+                Input {
+                    class: "w-24",
+                    value: unwrapped_value().0.get_hours(),
+                    oninput: move |e: FormEvent| {
+                        if let Ok(t) = e.value().parse::<i64>() {
+                            set(unwrapped_value().0.hours(t));
+                        }
+                    },
+                }
+
+                span { "h" }
+
+                Input {
+                    class: "w-24",
+                    value: unwrapped_value().0.get_minutes(),
+                    oninput: move |e: FormEvent| {
+                        if let Ok(t) = e.value().parse::<i64>() {
+                            set(unwrapped_value().0.minutes(t));
+                        }
+                    },
+                }
+
+                span { "m" }
+
+                Input {
+                    class: "w-24",
+                    value: unwrapped_value().0.get_seconds(),
+                    oninput: move |e: FormEvent| {
+                        if let Ok(t) = e.value().parse::<i64>() {
+                            set(unwrapped_value().0.seconds(t));
+                        }
+                    },
+                }
+
+                span { "s" }
+            }
         }
     }
 }
 
 #[component]
 fn SettingsSelector(setting: WriteSignal<types::CapabilitySetting>) -> Element {
+    trace!("Render step selector");
     let type_ = setting().reference_setting.id;
     let type_str = use_memo(move || Some(setting().reference_setting.id.to_string()));
 
     rsx! {
-        Tabs {
-            value: type_str,
-            on_value_change: move |v: String| {
-                setting.write().reference_setting = types::ReferenceSettingId::from_str(&v)
-                    .unwrap()
-                    .reference_setting();
-            },
+        div { class: "flex w-full flex-row items-center justify-start gap-4",
+            Tabs {
+                value: type_str,
+                on_value_change: move |v: String| {
+                    setting.write().reference_setting = types::ReferenceSettingId::from_str(&v)
+                        .unwrap()
+                        .reference_setting();
+                },
 
-            TabList {
-                TabTrigger {
-                    value: types::ReferenceSettingId::KeepWarm.to_string(),
-                    index: 0usize,
-                    "Keep warm"
-                }
-                TabTrigger {
-                    value: types::ReferenceSettingId::Temperature.to_string(),
-                    index: 0usize,
-                    "Temperature"
-                }
-                TabTrigger {
-                    value: types::ReferenceSettingId::Speed.to_string(),
-                    index: 0usize,
-                    "Speed"
-                }
-                TabTrigger {
-                    value: types::ReferenceSettingId::Time.to_string(),
-                    index: 0usize,
-                    "Time"
+                TabList {
+                    TabTrigger {
+                        value: types::ReferenceSettingId::KeepWarm.to_string(),
+                        index: 0usize,
+                        "Keep warm"
+                    }
+                    TabTrigger {
+                        value: types::ReferenceSettingId::Temperature.to_string(),
+                        index: 1usize,
+                        "Temperature"
+                    }
+                    TabTrigger {
+                        value: types::ReferenceSettingId::Speed.to_string(),
+                        index: 2usize,
+                        "Speed"
+                    }
+                    TabTrigger {
+                        value: types::ReferenceSettingId::Time.to_string(),
+                        index: 3usize,
+                        "Time"
+                    }
                 }
             }
-        }
 
-        match type_ {
-            types::ReferenceSettingId::KeepWarm =>
-                rsx! { KeepWarmSettingSelector { setting } },
-            types::ReferenceSettingId::Temperature =>
-                rsx! { TemperatureSettingSelector { setting } },
-            types::ReferenceSettingId::Speed =>
-                rsx! { SpeedSettingSelector { setting } },
-            types::ReferenceSettingId::Time =>
-                rsx! { TimeSettingSelector { setting } },
+            match type_ {
+                types::ReferenceSettingId::KeepWarm => rsx! {
+                    KeepWarmSettingSelector { setting }
+                },
+                types::ReferenceSettingId::Temperature => rsx! {
+                    TemperatureSettingSelector { setting }
+                },
+                types::ReferenceSettingId::Speed => rsx! {
+                    SpeedSettingSelector { setting }
+                },
+                types::ReferenceSettingId::Time => rsx! {
+                    TimeSettingSelector { setting }
+                },
+            }
         }
     }
 }
 
 #[component]
 fn StepCapability(capability: Store<types::StepCapability>) -> Element {
+    trace!("Render step capability");
     rsx! {
         Card {
             CardContent { class: "flex flex-col gap-4 justify-center",
+                div { class: "flex flex-col sm:flex-row sm:items-center gap-4",
 
-                Label { html_for: "phase", "Phase" }
-                select::Select::<types::CapabilityPhase> {
-                    // placeholder: capability().phase.name.clone(),
-                    value: Some(Some(capability().phase)),
-                    on_value_change: move |v| {
-                        if let Some(v) = v {
-                            capability.write().phase = v;
-                        }
-                    },
+                    Label { html_for: "phase", "Phase" }
+                    select::Select::<types::CapabilityPhase> {
+                        // placeholder: capability().phase.name.clone(),
+                        value: Some(Some(capability().phase)),
+                        on_value_change: move |v| {
+                            if let Some(v) = v {
+                                capability.write().phase = v;
+                            }
+                        },
 
-                    select::SelectTrigger { select::SelectValue {} }
+                        select::SelectTrigger { select::SelectValue {} }
 
-                    select::SelectList {
-                        for (idx , phase) in types::CapabilityPhase::known_options().into_iter().enumerate() {
-                            select::SelectOption::<types::CapabilityPhase> {
-                                index: idx,
-                                value: phase.clone(),
-                                text_value: phase.name.clone(),
+                        select::SelectList {
+                            for (idx , phase) in types::CapabilityPhase::known_options().into_iter().enumerate() {
+                                select::SelectOption::<types::CapabilityPhase> {
+                                    index: idx,
+                                    value: phase.clone(),
+                                    text_value: phase.name.clone(),
 
-                                "{phase.name}"
+                                    "{phase.name}"
+                                }
                             }
                         }
                     }
-                }
 
 
-                Label { html_for: "capability", "Capability" }
-                select::Select::<types::ReferenceCapability> {
-                    // placeholder: capability().reference_capability.name.clone(),
-                    value: Some(Some(capability().reference_capability)),
-                    on_value_change: move |v| {
-                        if let Some(v) = v {
-                            capability.write().reference_capability = v;
-                        }
-                    },
+                    Label { html_for: "capability", "Capability" }
+                    select::Select::<types::ReferenceCapability> {
+                        // placeholder: capability().reference_capability.name.clone(),
+                        value: Some(Some(capability.reference_capability().cloned())),
+                        on_value_change: move |v| {
+                            if let Some(v) = v {
+                                capability.reference_capability().set(v);
+                            }
+                        },
 
-                    select::SelectTrigger { select::SelectValue {} }
+                        select::SelectTrigger { select::SelectValue {} }
 
-                    select::SelectList {
-                        for (idx , capability) in types::ReferenceCapability::known_options().into_iter().enumerate() {
-                            select::SelectOption::<types::ReferenceCapability> {
-                                index: idx,
-                                value: capability.clone(),
-                                text_value: capability.name.clone(),
+                        select::SelectList {
+                            for (idx , capability) in types::ReferenceCapability::known_options().into_iter().enumerate() {
+                                select::SelectOption::<types::ReferenceCapability> {
+                                    index: idx,
+                                    value: capability.clone(),
+                                    text_value: capability.name.clone(),
 
-                                "{capability.name}"
+                                    "{capability.name}"
+                                }
                             }
                         }
                     }
@@ -531,20 +577,20 @@ fn StepCapability(capability: Store<types::StepCapability>) -> Element {
                 Label { html_for: "settings", "Settings" }
                 div { class: "flex flex-col justify-start gap-4",
 
-                    for idx in 0..capability().settings.len() {
+                    for (idx, setting) in capability.settings().iter().enumerate() {
                         div { class: "flex flex-row gap-4",
 
                             Button {
                                 variant: ButtonVariant::Outline,
 
                                 onclick: move |_| {
-                                    capability.write().settings.remove(idx);
+                                    capability.settings().remove(idx);
                                 },
 
                                 "X"
                             }
 
-                            SettingsSelector { setting: capability.map_mut(move |r| &r.settings[idx], move |r| &mut r.settings[idx]) }
+                            SettingsSelector { setting }
                         }
                     }
 
@@ -552,11 +598,7 @@ fn StepCapability(capability: Store<types::StepCapability>) -> Element {
                         class: "sm:max-w-1/2",
                         variant: ButtonVariant::Secondary,
                         onclick: move |_| {
-                            capability
-                                .with_mut(|i| {
-                                    let setting = types::CapabilitySetting::keep_warm_default();
-                                    i.settings.push(setting);
-                                });
+                            capability.settings().push(types::CapabilitySetting::keep_warm_default());
                         },
 
                         "Add preparation"
@@ -572,38 +614,58 @@ fn StepIngredient(
     ingredients: Store<Vec<types::RecipeIngredient>>,
     ingredient: Store<types::StepIngredient>,
 ) -> Element {
+    trace!("Render step ingredients");
     // signal that tracks the ingredient, used to move the ingredient_idx when
     // the list changes
     let mut recipe_ingredient = use_signal(move || {
         ingredients
-            .get(ingredient.ingredient_idx().read().clone() as usize)
-            .map(|x| x.read().clone())
+            .get(ingredient.ingredient_idx().cloned() as usize)
+            .map(|x| x.cloned())
     });
 
     let current_ingredient = use_memo(move || {
         ingredients
-            .get(ingredient.ingredient_idx().read().clone() as usize)
-            .map(|x| x.read().clone())
+            .get(ingredient.ingredient_idx().cloned() as usize)
+            .map(|x| x.cloned())
     });
 
     use_effect(move || {
         let Some(recipe_ingredient_) = recipe_ingredient() else {
             return;
         };
-        let Some(current_ingredient_) = current_ingredient() else {
-            return;
-        };
 
         // if the recipe positions changed, try to reconcile
-        if recipe_ingredient_.reference_ingredient.id != current_ingredient_.reference_ingredient.id
-        {
-            if let Some((new_index, _)) = ingredients().iter().find_position(|i| {
-                i.reference_ingredient.id == recipe_ingredient_.reference_ingredient.id
-            }) {
-                ingredient.write().ingredient_idx = new_index as u8;
-            }
 
-            recipe_ingredient.set(Some(current_ingredient_));
+        match current_ingredient() {
+            Some(current_ingredient_) => {
+                if recipe_ingredient_.reference_ingredient.id
+                    != current_ingredient_.reference_ingredient.id
+                {
+                    debug!("saved and current at index changed. saved: {recipe_ingredient_:?}, current: {recipe_ingredient_:?}");
+                    if let Some((new_index, _)) = ingredients().iter().find_position(|i| {
+                        i.reference_ingredient.id == recipe_ingredient_.reference_ingredient.id
+                    }) {
+                        debug!("Found it's now at {new_index}");
+                        ingredient.write().ingredient_idx = new_index as u8;
+                    }
+
+                    recipe_ingredient.set(Some(current_ingredient_));
+                }
+            }
+            None => {
+                debug!("saved index missing. saved: {recipe_ingredient_:?}");
+                debug!("Ingredients: {:#?}", ingredients());
+                if let Some((new_index, _)) = ingredients().iter().find_position(|i| {
+                    i.reference_ingredient.id == recipe_ingredient_.reference_ingredient.id
+                }) {
+                    debug!("Found it's now at {new_index}");
+                    ingredient.write().ingredient_idx = new_index as u8;
+                } else {
+                    // couldn't find :S
+                    debug!("Couldn't find new index, clearing");
+                    recipe_ingredient.set(None);
+                }
+            }
         }
     });
 
@@ -637,6 +699,8 @@ fn StepIngredient(
 
     rsx! {
         Card {
+            class: "grow",
+
             CardHeader {
                 div { class: "flex flex-row items-center gap-4",
                     CardTitle {
@@ -646,14 +710,15 @@ fn StepIngredient(
                                 value: Some(ingredient().ingredient_idx),
                                 on_value_change: move |v| {
                                     if let Some(v) = v {
-                                        ingredient.write().ingredient_idx = v;
+                                        ingredient.ingredient_idx().set(v);
+                                        recipe_ingredient.set(current_ingredient());
                                     }
                                 },
 
                                 select::SelectTrigger { select::SelectValue {} }
 
                                 select::SelectList {
-                                    for (idx, ingredient) in ingredients().iter().enumerate() {
+                                    for (idx , ingredient) in ingredients().iter().enumerate() {
                                         select::SelectOption::<u8> {
                                             index: idx,
                                             value: idx as u8,
@@ -661,7 +726,7 @@ fn StepIngredient(
 
                                             "{ingredient.reference_ingredient.name}"
 
-                                            SelectItemIndicator {}
+                                            select::SelectItemIndicator {}
                                         }
                                     }
                                 }
@@ -671,10 +736,9 @@ fn StepIngredient(
                 }
             }
 
-            CardContent {
-                class: "flex flex-col gap-4 justify-center",
+            CardContent { class: "flex flex-col gap-4 justify-center",
 
-                Label { html_for: "use_custom_quantity", "Use custom quantity" },
+                Label { html_for: "use_custom_quantity", "Use custom quantity" }
                 Checkbox {
                     name: "use_custom_quantity",
                     default_checked: using_custom_quantity(),
@@ -690,14 +754,11 @@ fn StepIngredient(
                                 ingredient.write().quantity = current_ingredient_.quantity;
                             }
                         }
-                    }
+                    },
                 }
 
                 if show_quantity() {
-                    Quantity {
-                        quantity: ingredient.quantity(),
-                        allowed_units
-                    }
+                    Quantity { quantity: ingredient.quantity(), allowed_units }
                 }
             }
         }
@@ -712,29 +773,24 @@ fn Step(
     // ingredients_matcher: Memo<FuzzyFinder<types::Ingredient>>,
     // preparations_matcher: Memo<FuzzyFinder<types::ReferencePreparation>>,
 ) -> Element {
+    trace!("Render step");
     // let ingredient_search_input = use_signal(|| String::new());
     // let unit_search_input = use_signal(|| String::new());
     rsx! {
         Card {
-            CardHeader {
-                "Step {idx}"
-            }
+            class: "grow",
+            CardHeader { "Step {idx + 1}" }
 
-            CardContent {
-                class: "flex flex-col gap-4 justify-center",
+            CardContent { class: "flex flex-col gap-4 justify-center",
 
                 Label { html_for: "capability", "Capability" }
                 if let Some(capability) = step.capability().transpose() {
-                    StepCapability {
-                        capability
-                    }
+                    StepCapability { capability }
 
                     Button {
                         class: "sm:max-w-1/2",
                         variant: ButtonVariant::Destructive,
-                        onclick: move |_| {
-                            step.capability().set(None)
-                        },
+                        onclick: move |_| { step.capability().set(None) },
 
                         "Remove capability"
                     }
@@ -743,11 +799,14 @@ fn Step(
                         class: "sm:max-w-1/2",
                         variant: ButtonVariant::Secondary,
                         onclick: move |_| {
-                            step.capability().set(Some(types::StepCapability {
-                                phase: types::CapabilityPhase::setup(),
-                                reference_capability: types::ReferenceCapability::bake(),
-                                settings: vec![]
-                            }))
+                            step.capability()
+                                .set(
+                                    Some(types::StepCapability {
+                                        phase: types::CapabilityPhase::setup(),
+                                        reference_capability: types::ReferenceCapability::bake(),
+                                        settings: vec![],
+                                    }),
+                                )
                         },
 
                         "Add capability"
@@ -755,44 +814,46 @@ fn Step(
                 }
 
                 Label { html_for: "preparations", "Preparations" }
-                div {
-                    class: "flex flex-col justify-start gap-4",
+                div { class: "flex flex-col justify-start gap-4",
 
                     for ingredient in step.ingredients().iter() {
-                            div {
-                                class: "flex flex-row gap-4",
+                        div { class: "flex flex-row gap-4",
+                            StepIngredient { ingredient, ingredients }
 
-                                Button {
-                                    variant: ButtonVariant::Outline,
+                            Button {
+                                class: "place-self-end",
+                                variant: ButtonVariant::Outline,
 
-                                    onclick: move |_| {
-                                        step.ingredients().remove(idx);
-                                    },
+                                onclick: move |_| {
+                                    step.ingredients().remove(idx);
+                                },
 
-                                    "X"
-                                }
-
-                                StepIngredient {
-                                    ingredient,
-                                    ingredients
-                                }
+                                "X"
                             }
                         }
+                    }
 
                     Button {
                         class: "sm:max-w-1/2",
                         variant: ButtonVariant::Secondary,
                         onclick: move |_| {
-                            if let Some(first_ingredient) = ingredients.first() {
-                                step.ingredients().push(types::StepIngredient {
-                                    ingredient_idx: 0,
-                                    quantity: first_ingredient.quantity.clone(),
-                                });
+                            if let Some(first_ingredient_quantity) = ingredients.first().map(|x| x.quantity.clone()) {
+                                step.ingredients()
+                                    .push(types::StepIngredient {
+                                        ingredient_idx: 0,
+                                        quantity: first_ingredient_quantity,
+                                    });
                             }
                         },
 
                         "Add ingredient"
                     }
+                }
+
+                Label { html_for: "instructions", "Instructions" }
+                Textarea {
+                    value: step.text(),
+                    oninput: move |e: FormEvent| step.text().set(e.value()),
                 }
             }
         }
@@ -851,16 +912,29 @@ impl<T> FuzzyFinder<T> {
 }
 
 #[component]
-pub fn EditRecipe(id: String) -> Element {
-    let recipe_initial = use_loader(move || recipe_server(id.clone()))?.cloned();
-    let recipe = use_store(move || recipe_initial);
-
+pub fn EditRecipeInner(recipe: Store<types::Recipe>) -> Element {
     let ingredients = use_loader(ingredients_server)?;
     let ingredients_matcher =
         use_memo(move || FuzzyFinder::new(ingredients.iter().map(|i| (i.name.clone(), i.clone()))));
     let preparations = use_loader(preparations_server)?;
     let preparations_matcher = use_memo(move || {
         FuzzyFinder::new(preparations.iter().map(|i| (i.name.clone(), i.clone())))
+    });
+
+    trace!("Render editrecipe");
+
+    let sync_total_time = use_callback(move |()| {
+        let prep_time = recipe
+            .prep_time()
+            .read()
+            .clone()
+            .unwrap_or_else(|| jiff::SignedDuration::ZERO);
+        let cook_time = recipe
+            .cook_time()
+            .read()
+            .clone()
+            .unwrap_or_else(|| jiff::SignedDuration::ZERO);
+        recipe.total_time().set(prep_time + cook_time);
     });
 
     rsx! {
@@ -879,8 +953,7 @@ pub fn EditRecipe(id: String) -> Element {
                 Label { html_for: "recipe_description", "Description" }
                 Textarea {
                     id: "recipe_description",
-                    placeholder: recipe.description().clone(),
-                    value: recipe.description().clone(),
+                    value: recipe.description(),
                     oninput: move |e: FormEvent| recipe.description().set(e.value()),
                 }
 
@@ -893,46 +966,50 @@ pub fn EditRecipe(id: String) -> Element {
                         min: 0,
                         value: recipe
                             .prep_time()
-                            .read().clone()
+                            .read()
+                            .clone()
                             .map(|x| x.as_mins())
                             .map(|x| x.to_string())
                             .unwrap_or(String::new()),
                         oninput: move |e: FormEvent| {
                             if let Ok(t) = e.value().parse::<i64>() {
                                 recipe.prep_time().set(Some(jiff::SignedDuration::from_mins(t)));
+                                sync_total_time.call(());
                             }
                         },
                     }
-                    span { "Seconds" }
+                    span { "Minutes" }
                 }
 
                 Label { html_for: "recipe_cook_time", "Cook time" }
                 div { class: "flex flex-row items-center gap-4",
 
                     Input {
-                        id: "recipe_cook_time",
+                        name: "recipe_cook_time",
                         r#type: "number",
                         min: 0,
                         value: recipe
                             .cook_time()
-                            .read().clone()
+                            .read()
+                            .clone()
                             .map(|x| x.as_mins())
                             .map(|x| x.to_string())
                             .unwrap_or(String::new()),
                         oninput: move |e: FormEvent| {
                             if let Ok(t) = e.value().parse::<i64>() {
                                 recipe.cook_time().set(Some(jiff::SignedDuration::from_mins(t)));
+                                sync_total_time.call(());
                             }
                         },
                     }
-                    span { "Seconds" }
+                    span { "Minutes" }
                 }
 
                 Label { html_for: "recipe_serves", "Serves" }
                 div { class: "flex flex-row items-center gap-4",
 
                     Input {
-                        id: "recipe_serves",
+                        name: "recipe_serves",
                         r#type: "number",
                         min: 0,
                         value: recipe.serves(),
@@ -945,6 +1022,8 @@ pub fn EditRecipe(id: String) -> Element {
                     span { "People" }
                 }
 
+                span { "Total time: {recipe.total_time().read().as_mins()} Minutes" }
+
                 Tabs { default_value: "ingredients",
 
                     TabList {
@@ -955,28 +1034,174 @@ pub fn EditRecipe(id: String) -> Element {
                     TabContent { index: 0usize, value: "ingredients",
                         div { class: "flex flex-col gap-4 p-4",
 
-                            for ingredient in recipe.ingredients().iter() {
-                                Ingredient {
-                                    ingredient,
-                                    ingredients_matcher,
-                                    preparations_matcher,
+                            for (idx , ingredient) in recipe.ingredients().iter().enumerate() {
+                                div { class: "flex flex-row gap-4",
+                                    Ingredient {
+                                        ingredient,
+                                        ingredients_matcher,
+                                        preparations_matcher,
+                                    }
+
+                                    div { class: "place-self-end",
+                                        Button {
+                                            variant: ButtonVariant::Outline,
+
+                                            onclick: move |_| {
+                                                recipe.ingredients().remove(idx);
+                                            },
+
+                                            "X"
+                                        }
+                                    }
                                 }
+                            }
+
+                            Button {
+                                class: "sm:max-w-1/2",
+                                variant: ButtonVariant::Secondary,
+                                onclick: move |_| {
+                                    recipe
+                                        .ingredients()
+                                        .push(types::RecipeIngredient {
+                                            quantity: types::Quantity {
+                                                amount: Some(1.0),
+                                                reference_unit: types::ReferenceUnit::gram(),
+                                                text: "1 gram".to_owned(),
+                                            },
+                                            reference_ingredient: types::Ingredient::flour(),
+                                            reference_preparations: vec![],
+                                            source_text: None,
+                                        });
+                                },
+
+                                "Add ingredient"
                             }
                         }
                     }
 
                     TabContent { index: 1usize, value: "steps",
                         div { class: "flex flex-col gap-4 p-4",
-                            for (idx, step) in recipe.steps().iter().enumerate() {
-                                Step {
-                                    idx,
-                                    step,
-                                    ingredients: recipe.ingredients()
+                            for (idx , step) in recipe.steps().iter().enumerate() {
+                                div { class: "flex flex-row gap-4",
+                                    Step {
+                                        idx,
+                                        step,
+                                        ingredients: recipe.ingredients(),
+                                    }
+
+                                    div { class: "place-self-end",
+                                        Button {
+                                            variant: ButtonVariant::Outline,
+
+                                            onclick: move |_| {
+                                                recipe.steps().remove(idx);
+                                            },
+
+                                            "X"
+                                        }
+                                    }
                                 }
+                            }
+
+                            Button {
+                                class: "sm:max-w-1/2",
+                                variant: ButtonVariant::Secondary,
+                                onclick: move |_| {
+                                    recipe
+                                        .steps()
+                                        .push(types::RecipeStep {
+                                            capability: None,
+                                            ingredients: vec![],
+                                            source_text: None,
+                                            text: "Do something".to_owned(),
+                                        });
+                                },
+
+                                "Add step"
                             }
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+#[component]
+pub fn NewRecipe() -> Element {
+    // todo: use correct author
+    let id = rand::distr::Alphanumeric.sample_string(&mut rand::rng(), 10);
+    let recipe = use_store(move || types::Recipe {
+        author: types::Author {
+            name: "Kenwood".to_owned(),
+            image: "https://configs.fresco-kitchenos.com/fresco-1180x1180.svg".to_owned(),
+            url: "https://configs.fresco-kitchenos.com/fresco-1180x1180.svg".to_owned(),
+        },
+        name: "".to_owned(),
+        description: "".to_owned(),
+        prep_time: None,
+        cook_time: None,
+        total_time: jiff::SignedDuration::new(0, 0),
+        created_at: chrono::Utc::now(),
+        created_by_id: "toad".to_owned(),
+        etag: id.clone(),
+        forked_into_other_locales: vec![],
+        ingredients: vec![],
+        locale: "en-GB".to_owned(),
+        modified_at: chrono::Utc::now(),
+        organization_id: "toads".to_owned(),
+        published_at: chrono::Utc::now(),
+        reference_tags: vec![],
+        serves: 1,
+        state: "published".to_owned(),
+        steps: vec![],
+        visibility: "all-users".to_owned(),
+        referenced: None,
+        requester_role: None,
+        id,
+    });
+
+    let nav = use_navigator();
+
+    rsx! {
+        EditRecipeInner { recipe }
+
+        div { class: "flex flex-row justify-end gap-4",
+            Button {
+                onclick: move |_| {
+                    let recipe = recipe();
+                    let id = recipe.id.clone();
+                    async move {
+                        let _ = save_recipe_server(recipe, true).await;
+
+                        nav.replace(crate::Route::EditRecipe { id });
+                    }
+                },
+
+                "Create recipe"
+            }
+        }
+    }
+}
+
+#[component]
+pub fn EditRecipe(id: String) -> Element {
+    let recipe_initial = use_loader(move || recipe_server(id.clone()))?.cloned();
+    let recipe = use_store(move || recipe_initial);
+
+    rsx! {
+        EditRecipeInner { recipe }
+
+        div { class: "flex flex-row justify-end gap-4",
+            Button {
+                onclick: move |_| {
+                    let recipe = recipe();
+                    async {
+                        let _ = save_recipe_server(recipe, false).await;
+                    }
+                },
+
+                "Update recipe"
             }
         }
     }
@@ -1007,6 +1232,21 @@ async fn ingredients_server() -> Result<Vec<types::Ingredient>> {
 
     let recipe = db::queries::ingredients::list_ingredients(crate::db::db(), None, None)
         .instrument(info_span!("Loading ingredients"))
+        .await
+        .map_err(|e| CapturedError::from_boxed(e.into()))?;
+
+    Ok(recipe)
+}
+
+#[server]
+async fn save_recipe_server(recipe: types::Recipe, create: bool) -> Result<()> {
+    use dioxus::{
+        logger::tracing::{info_span, Instrument as _},
+        CapturedError,
+    };
+
+    let recipe = db::queries::recipes::set_recipe(crate::db::db(), recipe, create)
+        .instrument(info_span!("Setting recipe"))
         .await
         .map_err(|e| CapturedError::from_boxed(e.into()))?;
 

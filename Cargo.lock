@@ -8290,15 +8290,18 @@ dependencies = [
 name = "ui"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "db",
  "dioxus",
  "dioxus-primitives",
  "dioxus-query",
  "dioxus-sdk",
  "english",
+ "getrandom 0.3.4",
  "itertools",
  "jiff",
  "nucleo-matcher",
+ "rand 0.9.2",
  "sea-orm",
  "serde_json",
  "tokio",

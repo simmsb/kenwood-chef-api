@@ -6,18 +6,26 @@ pub fn Navbar() -> Element {
     rsx! {
         div { class: "m-4 flex p-1 rounded-1 gap-1",
 
-            div { class: "relative",
+            // div { class: "relative",
 
-                LinkButton {
-                    variant: crate::components::button::ButtonVariant::Secondary,
-                    to: Route::Home {},
+            LinkButton {
+                variant: crate::components::button::ButtonVariant::Secondary,
+                to: Route::Home {},
 
-                    "Home"
-                }
+                "Home"
             }
-        
+
+            LinkButton {
+                variant: crate::components::button::ButtonVariant::Secondary,
+                to: Route::NewRecipe {},
+
+                "New recipe"
+            }
+                // }
         }
 
-        Outlet::<Route> {}
+        div { class: "flex justify-center",
+            div { class: "flex flex-col w-3/4 gap-4", Outlet::<Route> {} }
+        }
     }
 }

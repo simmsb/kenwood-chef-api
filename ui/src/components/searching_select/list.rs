@@ -3,8 +3,8 @@
 use std::time::Duration;
 
 use dioxus::prelude::*;
-use dioxus_sdk::time::TimeoutHandle;
 use dioxus_sdk::time::use_timeout;
+use dioxus_sdk::time::TimeoutHandle;
 
 use super::context::*;
 use super::utils::*;

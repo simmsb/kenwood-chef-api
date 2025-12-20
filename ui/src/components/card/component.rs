@@ -2,12 +2,13 @@ use dioxus::prelude::*;
 
 #[component]
 pub fn Card(
+    #[props(default)] class: String,
     #[props(extends=GlobalAttributes)] attributes: Vec<Attribute>,
     children: Element,
 ) -> Element {
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
-        div { class: "card", "data-slot": "card", ..attributes, {children} }
+        div { class: "{class} card", "data-slot": "card", ..attributes, {children} }
     }
 }
 
@@ -58,8 +59,7 @@ pub fn CardAction(
 
 #[component]
 pub fn CardContent(
-    #[props(default)]
-    class: String,
+    #[props(default)] class: String,
     #[props(extends=GlobalAttributes)] attributes: Vec<Attribute>,
     children: Element,
 ) -> Element {

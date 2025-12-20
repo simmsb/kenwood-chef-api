@@ -5,7 +5,7 @@ use chrono::{DateTime, Utc};
 use dioxus_stores::Store;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, Store)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Store)]
 pub struct IngredientAllowedUnit {
     pub id: String,
     pub name: String,
@@ -25,40 +25,40 @@ impl IngredientAllowedUnit {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, Store)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Store)]
 pub struct Ingredient {
     pub id: String,
     pub name: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, Store)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Store)]
 pub struct Author {
     pub image: String,
     pub name: String,
     pub url: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, Store)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Store)]
 pub struct ForkedIntoOtherLocale {
     pub id: String,
     pub locale: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, Store)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Store)]
 pub struct ReferenceUnit {
     pub abbreviation: String,
     pub id: String,
     pub name: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, Store)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Store)]
 pub struct ReferencePreparation {
     pub id: String,
     pub name: String,
 }
 
 #[serde_with::serde_as]
-#[derive(Serialize, Deserialize, Clone, PartialEq, Store)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Store)]
 pub struct RecipeIngredient {
     pub quantity: Quantity,
     pub reference_ingredient: Ingredient,
@@ -69,27 +69,27 @@ pub struct RecipeIngredient {
     pub source_text: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, Store)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Store)]
 pub struct ReferenceTag {
     pub category: String,
     pub id: String,
     pub name: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, Store)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Store)]
 pub struct CapabilityPhase {
     pub can_follow_phases: Vec<String>,
     pub id: String,
     pub name: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, Store)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Store)]
 pub struct ReferenceCapability {
     pub id: String,
     pub name: String,
 }
 
-#[derive(Serialize, Deserialize, Copy, Clone, PartialEq, strum::Display, strum::EnumString)]
+#[derive(Debug, Serialize, Deserialize, Copy, Clone, PartialEq, strum::Display, strum::EnumString)]
 pub enum ReferenceSettingId {
     #[serde(rename = "kitchenos:Kenwood:KeepWarmSetting")]
     KeepWarm,
@@ -108,19 +108,19 @@ pub enum ReferenceSettingId {
     Time,
 }
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, Store)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Store)]
 pub struct ReferenceSetting {
     pub id: ReferenceSettingId,
     pub name: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, Store)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Store)]
 pub struct ReferenceValue {
     pub id: String,
     pub name: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, Store)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Store)]
 #[serde(tag = "type")]
 pub enum SettingValue {
     #[serde(rename = "numeric")]
@@ -140,14 +140,14 @@ pub enum SettingValue {
     },
 }
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, Store)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Store)]
 pub struct CapabilitySetting {
     pub reference_setting: ReferenceSetting,
     pub value: SettingValue,
 }
 
 #[serde_with::serde_as]
-#[derive(Serialize, Deserialize, Clone, PartialEq, Store)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Store)]
 pub struct StepCapability {
     pub phase: CapabilityPhase,
     pub reference_capability: ReferenceCapability,
@@ -157,21 +157,21 @@ pub struct StepCapability {
     pub settings: Vec<CapabilitySetting>,
 }
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, Store)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Store)]
 pub struct Quantity {
     pub amount: Option<f64>,
     pub reference_unit: ReferenceUnit,
     pub text: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, Store)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Store)]
 pub struct StepIngredient {
     pub ingredient_idx: u8,
     pub quantity: Quantity,
 }
 
 #[serde_with::serde_as]
-#[derive(Serialize, Deserialize, Clone, PartialEq, Store)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Store)]
 pub struct RecipeStep {
     pub capability: Option<StepCapability>,
 
@@ -183,7 +183,7 @@ pub struct RecipeStep {
     pub text: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, PartialEq, Store)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Store)]
 pub struct Recipe {
     pub author: Author,
     pub created_at: DateTime<Utc>,
@@ -206,13 +206,25 @@ pub struct Recipe {
     pub total_time: jiff::SignedDuration,
     pub visibility: String,
 
+    #[serde(default, with = "span_field_wise_opt")]
     pub cook_time: Option<jiff::SignedDuration>,
 
+    #[serde(default, with = "span_field_wise_opt")]
     pub prep_time: Option<jiff::SignedDuration>,
 
     pub referenced: Option<bool>,
 
     pub requester_role: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Store)]
+pub struct RecipeItem {
+    pub id: String,
+    pub name: String,
+    pub author_name: String,
+
+    #[serde(with = "span_field_wise")]
+    pub total_time: jiff::SignedDuration
 }
 
 pub mod span_field_wise {

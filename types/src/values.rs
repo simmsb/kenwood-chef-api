@@ -1,6 +1,5 @@
 use crate::{
-    CapabilityPhase, CapabilitySetting, ReferenceCapability, ReferenceSetting, ReferenceSettingId,
-    ReferenceUnit, ReferenceValue, SettingValue,
+    CapabilityPhase, CapabilitySetting, Ingredient, ReferenceCapability, ReferenceSetting, ReferenceSettingId, ReferenceUnit, ReferenceValue, SettingValue
 };
 
 pub trait KnownOptions
@@ -404,6 +403,23 @@ impl ReferenceUnit {
             id: "cckg:Celsius".to_owned(),
             name: "Celcius".to_owned(),
             abbreviation: "°C".to_owned(),
+        }
+    }
+
+    pub fn gram() -> Self {
+        Self {
+            id: "cckg:Gram".to_owned(),
+            name: "gram".to_owned(),
+            abbreviation: "g".to_owned(),
+        }
+    }
+}
+
+impl Ingredient {
+    pub fn flour() -> Self {
+        Self {
+            id: "cckg:AllPurposeFlour".to_owned(),
+            name: "plain flour".to_owned(),
         }
     }
 }

@@ -2,7 +2,7 @@
 // need dioxus
 use dioxus::prelude::*;
 
-use views::{EditRecipe, Home, Navbar};
+use views::{EditRecipe, Home, Navbar, NewRecipe};
 
 /// Define a components module that contains all shared components for our app.
 mod components;
@@ -25,6 +25,8 @@ enum Route {
         Home {},
         #[route("/edit/:id")]
         EditRecipe { id: String },
+        #[route("/new")]
+        NewRecipe {},
 }
 
 // We can import assets in dioxus with the `asset!` macro. This macro takes a path to an asset relative to the crate root.

@@ -5,9 +5,7 @@ use select::{
 };
 
 mod select {
-    pub use super::super::{
-        group::*, list::*, option::*, select::*, trigger::*, value::*,
-    };
+    pub use super::super::{group::*, list::*, option::*, select::*, trigger::*, value::*};
 }
 
 #[component]

@@ -7,7 +7,7 @@ use crate::Route;
 #[component]
 pub fn RecipeItem(recipe: types::Recipe) -> Element {
     rsx! {
-        Card { class: "w-full max-w-8",
+        Card { class: "w-full",
 
             CardHeader {
                 CardTitle { "{recipe.name}" }

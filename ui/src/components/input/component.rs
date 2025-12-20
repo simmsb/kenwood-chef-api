@@ -2,8 +2,7 @@ use dioxus::prelude::*;
 
 #[component]
 pub fn Input(
-    #[props(default)]
-    class: String,
+    #[props(default)] class: String,
     oninput: Option<EventHandler<FormEvent>>,
     onchange: Option<EventHandler<FormEvent>>,
     oninvalid: Option<EventHandler<FormEvent>>,
