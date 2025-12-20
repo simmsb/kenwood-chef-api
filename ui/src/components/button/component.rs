@@ -81,12 +81,12 @@ pub fn LinkButton(
         Link {
             class: "button",
             "data-style": variant.class(),
-            to: to,
-            onclick: onclick,
-            onmounted: onmounted,
-            onclick_only: onclick_only,
-            rel: rel,
-            attributes: attributes,
+            to,
+            onclick,
+            onmounted,
+            onclick_only,
+            rel,
+            attributes,
             {children}
         }
     }

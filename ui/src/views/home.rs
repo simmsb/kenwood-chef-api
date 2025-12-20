@@ -10,10 +10,8 @@ pub fn Home() -> Element {
     let recipes = use_loader(move || recipes_server(Some(current_page().0), Some(100)))?;
 
     rsx! {
-        div {
-            class: "flex justify-center",
-            div {
-                class: "flex flex-col w-3/4 gap-4",
+        div { class: "flex justify-center",
+            div { class: "flex flex-col w-3/4 gap-4",
 
                 Pagination {
                     prev_page: move |()| {
@@ -23,13 +21,10 @@ pub fn Home() -> Element {
                         *current_page.write() += 1;
                     },
 
-                    div {
-                        class: "flex flex-col gap-4",
+                    div { class: "flex flex-col gap-4",
 
                         for recipe in recipes.cloned() {
-                            RecipeItem {
-                                recipe: recipe
-                            }
+                            RecipeItem { recipe }
                         }
                     }
                 }

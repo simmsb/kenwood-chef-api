@@ -7,12 +7,7 @@ pub fn Card(
 ) -> Element {
     rsx! {
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
-        div {
-            class: "card",
-            "data-slot": "card",
-            ..attributes,
-            {children}
-        }
+        div { class: "card", "data-slot": "card", ..attributes, {children} }
     }
 }
 
@@ -22,12 +17,7 @@ pub fn CardHeader(
     children: Element,
 ) -> Element {
     rsx! {
-        div {
-            class: "card-header",
-            "data-slot": "card-header",
-            ..attributes,
-            {children}
-        }
+        div { class: "card-header", "data-slot": "card-header", ..attributes, {children} }
     }
 }
 
@@ -37,12 +27,7 @@ pub fn CardTitle(
     children: Element,
 ) -> Element {
     rsx! {
-        div {
-            class: "card-title",
-            "data-slot": "card-title",
-            ..attributes,
-            {children}
-        }
+        div { class: "card-title", "data-slot": "card-title", ..attributes, {children} }
     }
 }
 
@@ -67,12 +52,7 @@ pub fn CardAction(
     children: Element,
 ) -> Element {
     rsx! {
-        div {
-            class: "card-action",
-            "data-slot": "card-action",
-            ..attributes,
-            {children}
-        }
+        div { class: "card-action", "data-slot": "card-action", ..attributes, {children} }
     }
 }
 
@@ -99,11 +79,6 @@ pub fn CardFooter(
     children: Element,
 ) -> Element {
     rsx! {
-        div {
-            class: "card-footer",
-            "data-slot": "card-footer",
-            ..attributes,
-            {children}
-        }
+        div { class: "card-footer", "data-slot": "card-footer", ..attributes, {children} }
     }
 }

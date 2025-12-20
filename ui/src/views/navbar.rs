@@ -4,11 +4,9 @@ use dioxus::prelude::*;
 #[component]
 pub fn Navbar() -> Element {
     rsx! {
-        div {
-            class: "m-4 flex p-1 rounded-1 gap-1",
+        div { class: "m-4 flex p-1 rounded-1 gap-1",
 
-            div {
-                class: "relative",
+            div { class: "relative",
 
                 LinkButton {
                     variant: crate::components::button::ButtonVariant::Secondary,
@@ -17,7 +15,7 @@ pub fn Navbar() -> Element {
                     "Home"
                 }
             }
-
+        
         }
 
         Outlet::<Route> {}

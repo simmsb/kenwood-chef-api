@@ -59,8 +59,6 @@ fn App() -> Element {
         // the layouts and components for the active route.
         Router::<Route> {}
 
-        div {
-            class: "mt-10"
-        }
+        div { class: "mt-10" }
     }
 }
