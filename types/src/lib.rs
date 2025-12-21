@@ -31,7 +31,8 @@ impl Default for UID {
 impl<'de> Deserialize<'de> for UID {
     fn deserialize<D>(_deserializer: D) -> Result<Self, D::Error>
     where
-        D: serde::Deserializer<'de> {
+        D: serde::Deserializer<'de>,
+    {
         Ok(Self::new())
     }
 }
@@ -52,7 +53,7 @@ impl IngredientAllowedUnit {
     pub fn as_reference_unit(self) -> ReferenceUnit {
         ReferenceUnit {
             id: self.id,
-            abbreviation: self.abbreviation.unwrap_or_else(String::new),
+            abbreviation: self.abbreviation.unwrap_or_default(),
             name: self.name,
         }
     }
@@ -267,10 +268,18 @@ pub struct Recipe {
     pub total_time: jiff::SignedDuration,
     pub visibility: String,
 
-    #[serde(default, with = "span_field_wise_opt", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        with = "span_field_wise_opt",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub cook_time: Option<jiff::SignedDuration>,
 
-    #[serde(default, with = "span_field_wise_opt", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        with = "span_field_wise_opt",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub prep_time: Option<jiff::SignedDuration>,
 
     #[serde(default, skip_serializing_if = "Option::is_none")]

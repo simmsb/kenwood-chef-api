@@ -1,13 +1,11 @@
 use color_eyre::eyre::OptionExt as _;
-use migration::{OnConflict, OnConflictUpdate};
+use migration::OnConflict;
 use sea_orm::EntityLoaderTrait;
 use sea_orm::EntityLoaderTrait as _;
 use sea_orm::EntityTrait as _;
-use sea_orm::ModelTrait;
-use sea_orm::QueryFilter;
 use sea_orm::{ActiveValue::Set, DatabaseConnection};
 
-use crate::entities::{self, image, prelude::*};
+use crate::entities::{image, prelude::*};
 
 pub async fn get_image(db: &DatabaseConnection, image_id: &str) -> color_eyre::Result<Vec<u8>> {
     let image = Image::load()

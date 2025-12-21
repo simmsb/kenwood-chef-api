@@ -3,9 +3,7 @@ use std::{fs::File, io::BufReader, path::PathBuf};
 use clap::{Args, ValueHint};
 use color_eyre::{Result, eyre::Context};
 use resolve_path::PathResolveExt;
-use sea_orm::
-    Database
-;
+use sea_orm::Database;
 use serde::Deserialize;
 
 use db::queries::ingest::{self, IngestIngredient, IngestUnit};
@@ -27,7 +25,7 @@ pub struct IngestData {
 
 fn load<'de, T: Deserialize<'de>>(filepath: PathBuf) -> Result<T> {
     let jd = &mut serde_json::Deserializer::from_reader(BufReader::new(
-        File::open(&filepath.resolve()).wrap_err_with(|| format!("Opening file {filepath:?}"))?,
+        File::open(filepath.resolve()).wrap_err_with(|| format!("Opening file {filepath:?}"))?,
     ));
 
     serde_path_to_error::deserialize(jd).wrap_err_with(|| format!("Parsing {filepath:?}"))
@@ -54,7 +52,9 @@ pub async fn run(
     ingest::insert_preparations(&db, &preparations)
         .await
         .context("Ingesting preparations")?;
-    ingest::insert_units(&db, &units).await.context("Ingesting units")?;
+    ingest::insert_units(&db, &units)
+        .await
+        .context("Ingesting units")?;
     ingest::insert_ingredient_units(&db, &ingredients)
         .await
         .context("Ingesting ingredient allowed units")?;

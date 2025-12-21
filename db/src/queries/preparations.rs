@@ -1,9 +1,7 @@
-use color_eyre::eyre::OptionExt as _;
 use sea_orm::DatabaseConnection;
 use sea_orm::EntityLoaderTrait;
 use sea_orm::EntityLoaderTrait as _;
 use sea_orm::EntityTrait as _;
-use sea_orm::ModelTrait;
 use sea_orm::QueryFilter;
 
 use crate::entities::prelude::*;

@@ -250,7 +250,7 @@ fn Ingredient(
 
                                 "X"
                             }
-                        
+
                         }
                     }
 
