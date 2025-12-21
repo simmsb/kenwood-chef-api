@@ -89,7 +89,9 @@ pub struct ReferenceCapability {
     pub name: String,
 }
 
-#[derive(Debug, Serialize, Deserialize, Copy, Clone, PartialEq, strum::Display, strum::EnumString)]
+#[derive(
+    Debug, Serialize, Deserialize, Copy, Clone, PartialEq, strum::Display, strum::EnumString,
+)]
 pub enum ReferenceSettingId {
     #[serde(rename = "kitchenos:Kenwood:KeepWarmSetting")]
     KeepWarm,
@@ -224,7 +226,7 @@ pub struct RecipeItem {
     pub author_name: String,
 
     #[serde(with = "span_field_wise")]
-    pub total_time: jiff::SignedDuration
+    pub total_time: jiff::SignedDuration,
 }
 
 pub mod span_field_wise {

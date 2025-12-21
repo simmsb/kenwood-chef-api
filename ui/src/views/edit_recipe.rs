@@ -2,7 +2,10 @@ use core::str::FromStr;
 use rand::distr::SampleString;
 use std::string::ToString;
 
-use dioxus::prelude::*;
+use dioxus::{
+    fullstack::{Form, MultipartFormData},
+    prelude::*,
+};
 use dioxus_primitives::checkbox::CheckboxState;
 use itertools::Itertools;
 use types::traits::*;
@@ -176,8 +179,7 @@ fn Ingredient(
     let allowed_units = use_memo(move || allowed_units());
 
     rsx! {
-        Card {
-            class: "grow",
+        Card { class: "grow",
 
             CardHeader {
                 div { class: "flex flex-row items-center gap-4",
@@ -245,7 +247,7 @@ fn Ingredient(
 
                                 "X"
                             }
-
+                        
                         }
                     }
 
@@ -577,7 +579,7 @@ fn StepCapability(capability: Store<types::StepCapability>) -> Element {
                 Label { html_for: "settings", "Settings" }
                 div { class: "flex flex-col justify-start gap-4",
 
-                    for (idx, setting) in capability.settings().iter().enumerate() {
+                    for (idx , setting) in capability.settings().iter().enumerate() {
                         div { class: "flex flex-row gap-4",
 
                             Button {
@@ -698,8 +700,7 @@ fn StepIngredient(
     let show_quantity = use_memo(move || force_show_quantity() || using_custom_quantity().into());
 
     rsx! {
-        Card {
-            class: "grow",
+        Card { class: "grow",
 
             CardHeader {
                 div { class: "flex flex-row items-center gap-4",
@@ -777,8 +778,7 @@ fn Step(
     // let ingredient_search_input = use_signal(|| String::new());
     // let unit_search_input = use_signal(|| String::new());
     rsx! {
-        Card {
-            class: "grow",
+        Card { class: "grow",
             CardHeader { "Step {idx + 1}" }
 
             CardContent { class: "flex flex-col gap-4 justify-center",
@@ -837,7 +837,10 @@ fn Step(
                         class: "sm:max-w-1/2",
                         variant: ButtonVariant::Secondary,
                         onclick: move |_| {
-                            if let Some(first_ingredient_quantity) = ingredients.first().map(|x| x.quantity.clone()) {
+                            if let Some(first_ingredient_quantity) = ingredients
+                                .first()
+                                .map(|x| x.quantity.clone())
+                            {
                                 step.ingredients()
                                     .push(types::StepIngredient {
                                         ingredient_idx: 0,
@@ -942,6 +945,32 @@ pub fn EditRecipeInner(recipe: Store<types::Recipe>) -> Element {
         div { class: "flex justify-center",
 
             div { class: "flex flex-col w-3/4 gap-4 justify-center",
+
+                form {
+                    class: "flex flex-col gap-4",
+
+                    onsubmit: move |e: FormEvent| async move {
+                        e.prevent_default();
+
+                        upload_image(e.into()).await.unwrap();
+                    },
+
+                    input { name: "id", hidden: true, value: recipe.id() }
+
+                    Label { html_for: "data", "Image" }
+                    div { class: "flex flex-row gap-4 justify-start items-center",
+                        Input {
+                            r#type: "file",
+                            name: "data",
+                            accept: ".png,.jpg,.jpeg,.webp",
+                        }
+                        Input {
+                            r#type: "submit",
+                            name: "submit",
+                            value: "Set image",
+                        }
+                    }
+                }
 
                 Label { html_for: "recipe_name", "Name" }
                 Input {
@@ -1205,6 +1234,53 @@ pub fn EditRecipe(id: String) -> Element {
             }
         }
     }
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+struct UploadImage {
+    id: String,
+    data: Vec<u8>,
+}
+
+#[server]
+async fn upload_image(mut form: MultipartFormData) -> Result<()> {
+    use dioxus::CapturedError;
+
+    let mut recipe_id = None;
+    let mut data = None;
+
+    while let Ok(Some(field)) = form.next_field().await {
+        if field.name() == Some("id") {
+            recipe_id = Some(field.text().await?);
+            continue;
+        }
+
+        if field.name() == Some("data") {
+            data = Some(field.bytes().await?);
+            continue;
+        }
+    }
+
+    let (Some(recipe_id), Some(data)) = (recipe_id, data) else {
+        return Ok(());
+    };
+
+    let image = image::ImageReader::new(std::io::Cursor::new(&data))
+        .with_guessed_format()
+        .context("Guessing image format")?
+        .decode()
+        .context("Decoding image")?;
+
+    let mut data = Vec::<u8>::new();
+    image
+        .write_to(std::io::Cursor::new(&mut data), image::ImageFormat::WebP)
+        .context("Coverting image")?;
+
+    db::queries::images::set_image(crate::db::db(), &recipe_id, data)
+        .await
+        .map_err(|e| CapturedError::from_boxed(e.into()))?;
+
+    Ok(())
 }
 
 #[server]

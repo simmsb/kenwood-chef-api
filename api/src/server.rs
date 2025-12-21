@@ -7,7 +7,10 @@ use axum::{
 use color_eyre::eyre::{Context, OptionExt as _};
 use http_body_util::BodyExt;
 use sea_orm::DatabaseConnection;
-use std::sync::LazyLock;
+use std::{
+    io::{BufReader, Cursor},
+    sync::LazyLock,
+};
 use tracing::{Instrument as _, debug_span, error, info, warn};
 
 pub(crate) static CERT: &[u8] = include_bytes!("../../server.crt");
@@ -39,18 +42,80 @@ impl IntoResponse for AppError {
     }
 }
 
-// #[derive(serde::Deserialize)]
-// struct ImageDimensions {
-//     width: u32,
-//     height: u32,
-// }
+#[derive(serde::Deserialize)]
+struct ImageDimensions {
+    width: u32,
+    height: u32,
+}
 
-// async fn recipe_hero(
-//     Path(recipe_id): Path<String>,
-//     Query(dims): Query<ImageDimensions>,
-// ) -> Result<axum::response::Response> {
+#[axum::debug_handler]
+async fn recipe_hero(
+    Path(recipe_id): Path<String>,
+    Query(dims): Query<ImageDimensions>,
+    headers: HeaderMap,
+) -> Result<axum::response::Response> {
+    if let Ok(mut image) = db::queries::images::get_image(db().await, &recipe_id).await {
+        info!(recipe_id = recipe_id, "Found custom image");
 
-// }
+        let decoded = image::ImageReader::new(Cursor::new(&image))
+            .with_guessed_format()
+            .context("Guessing image format")?
+            .decode()
+            .context("Decoding image")?;
+
+        let resized = decoded.resize_to_fill(
+            dims.width,
+            dims.height,
+            image::imageops::FilterType::Triangle,
+        );
+
+        image.clear();
+        resized
+            .write_to(Cursor::new(&mut image), image::ImageFormat::WebP)
+            .context("Converting image")?;
+
+        return Ok((
+            axum::http::StatusCode::OK,
+            [(axum::http::header::CONTENT_TYPE, "image/webp")],
+            image,
+        )
+            .into_response());
+    }
+
+    info!(recipe_id = recipe_id, "Falling back on server image");
+
+    let domain = headers
+        .get(axum::http::header::HOST)
+        .ok_or_eyre("Expected a host header")?
+        .to_str()
+        .context("Stringifying host")?;
+
+    let url = reqwest::Url::parse(&format!(
+        "https://{domain}/media/images/recipes/{recipe_id}/hero?width={}&height={}",
+        dims.width, dims.height
+    ))
+    .context("Building URL")?;
+
+    let resp = REQ_CLIENT
+        .get(url)
+        .headers(headers.clone())
+        .send()
+        .instrument(debug_span!("fallback_request"))
+        .await
+        .context("Making fallback proxy request")?;
+
+    let (resp_parts, resp_body) = axum::http::Response::from(resp).into_parts();
+    let resp_body = resp_body
+        .collect()
+        .await
+        .context("Reading response body")?
+        .to_bytes();
+
+    Ok(axum::http::Response::from_parts(
+        resp_parts,
+        resp_body.into(),
+    ))
+}
 
 #[axum::debug_handler]
 async fn recipe(
@@ -178,6 +243,10 @@ pub async fn run() -> color_eyre::Result<()> {
             axum::routing::get(collections_saved_recipes),
         )
         .route("/recipes/{recipe_id}", axum::routing::get(recipe))
+        .route(
+            "/media/images/recipes/{recipe_id}/hero",
+            axum::routing::get(recipe_hero),
+        )
         .fallback(axum::routing::any(api_fallback));
 
     let addr = std::net::SocketAddr::from(([0, 0, 0, 0], 443));

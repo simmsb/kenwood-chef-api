@@ -41,14 +41,14 @@ pub fn Toggle(
         document::Link { rel: "stylesheet", href: asset!("./style.css") }
         toggle::Toggle {
             class: "{class} toggle",
-            pressed: pressed,
-            default_pressed: default_pressed,
-            disabled: disabled,
-            on_pressed_change: on_pressed_change,
-            onmounted: onmounted,
-            onfocus: onfocus,
-            onkeydown: onkeydown,
-            attributes: attributes,
+            pressed,
+            default_pressed,
+            disabled,
+            on_pressed_change,
+            onmounted,
+            onfocus,
+            onkeydown,
+            attributes,
             {children}
         }
     }

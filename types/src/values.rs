@@ -1,5 +1,6 @@
 use crate::{
-    CapabilityPhase, CapabilitySetting, Ingredient, ReferenceCapability, ReferenceSetting, ReferenceSettingId, ReferenceUnit, ReferenceValue, SettingValue
+    CapabilityPhase, CapabilitySetting, Ingredient, ReferenceCapability, ReferenceSetting,
+    ReferenceSettingId, ReferenceUnit, ReferenceValue, SettingValue,
 };
 
 pub trait KnownOptions

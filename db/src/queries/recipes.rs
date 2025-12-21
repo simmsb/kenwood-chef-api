@@ -10,8 +10,7 @@ use sea_orm::{
     ColumnTrait as _, EntityLoaderTrait,
 };
 
-use crate::entities::{self, recipe};
-use crate::entities::{author, prelude::*};
+use crate::entities::{self, author, prelude::*, recipe};
 
 pub async fn list_recipes(
     db: &DatabaseConnection,

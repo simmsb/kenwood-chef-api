@@ -3,6 +3,7 @@
 pub mod prelude;
 
 pub mod author;
+pub mod image;
 pub mod ingredient;
 pub mod ingredient_unit;
 pub mod preparation;

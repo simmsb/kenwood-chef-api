@@ -1,6 +1,6 @@
 use std::num::Saturating;
 
-use crate::components::{paginate::Pagination, RecipeItem, toggle::*};
+use crate::components::{paginate::Pagination, toggle::*, RecipeItem};
 use dioxus::prelude::*;
 
 /// The Home page component that will be rendered when the current route is `[Route::Home]`
@@ -8,7 +8,8 @@ use dioxus::prelude::*;
 pub fn Home() -> Element {
     let mut current_page = use_signal(|| Saturating(0u64));
     let mut show_all = use_signal(|| false);
-    let recipes = use_loader(move || recipes_server(Some(current_page().0), Some(100), show_all()))?;
+    let recipes =
+        use_loader(move || recipes_server(Some(current_page().0), Some(100), show_all()))?;
 
     rsx! {
         Toggle {
@@ -16,9 +17,7 @@ pub fn Home() -> Element {
             pressed: show_all(),
             on_pressed_change: move |p| show_all.set(p),
 
-            span {
-                "Show all recipes"
-            }
+            span { "Show all recipes" }
         }
 
         Pagination {
@@ -48,7 +47,11 @@ impl<T: core::fmt::Display + core::fmt::Debug> core::fmt::Display for AlternateD
 }
 
 #[server]
-async fn recipes_server(offset: Option<u64>, limit: Option<u64>, all: bool) -> Result<Vec<types::Recipe>> {
+async fn recipes_server(
+    offset: Option<u64>,
+    limit: Option<u64>,
+    all: bool,
+) -> Result<Vec<types::Recipe>> {
     use dioxus::{
         logger::tracing::{info_span, Instrument as _},
         CapturedError,

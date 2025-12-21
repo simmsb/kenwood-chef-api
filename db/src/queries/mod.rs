@@ -1,3 +1,4 @@
+pub mod images;
 pub mod ingredients;
-pub mod recipes;
 pub mod preparations;
+pub mod recipes;
