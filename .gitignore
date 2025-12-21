@@ -15,3 +15,5 @@ devenv.local.yaml
 /target
 
 *.sqlite
+
+/result

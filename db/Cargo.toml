@@ -6,12 +6,12 @@ edition = "2024"
 [dependencies]
 anyhow = "1.0.100"
 color-eyre = "0.6.5"
-itertools = "0.14.0"
+itertools = { workspace = true } #unified
 jiff = { workspace = true } #unified
 migration = { workspace = true } #unified
 sea-orm = { version = "^2.0.0-rc", features = ["sqlx-sqlite", "macros", "runtime-tokio-rustls", "with-json"] }
 serde = { workspace = true, features = ["derive"] } #unified
 serde_json = { workspace = true } #unified
-serde_path_to_error = "0.1.20"
+serde_path_to_error = { workspace = true } #unified
 tracing = { workspace = true, features = ["async-await"] } #unified
 types = { workspace = true } #unified

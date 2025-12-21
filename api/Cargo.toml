@@ -12,8 +12,8 @@ clap = { version = "4.5.53", features = ["derive"] }
 color-eyre = "0.6.5"
 db = { workspace = true } #unified
 http-body-util = { version = "0.1.3", features = ["full"] }
-image = "0.25.9"
-itertools = "0.14.0"
+image = { workspace = true } #unified
+itertools = { workspace = true } #unified
 migration = { workspace = true } #unified
 reqwest = { version = "0.12.25", features = ["json"] }
 resolve-path = "0.1.0"
@@ -22,7 +22,7 @@ rustls = "0.23.35"
 sea-orm = { version = "^2.0.0-rc", features = ["sqlx-sqlite", "macros", "runtime-tokio-rustls", "with-json"] }
 serde = { workspace = true } #unified
 serde_json = { workspace = true } #unified
-serde_path_to_error = "0.1.20"
+serde_path_to_error = { workspace = true } #unified
 tokio = { workspace = true } #unified
 tracing = { workspace = true } #unified
 tracing-subscriber = "0.3.22"

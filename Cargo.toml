@@ -11,10 +11,14 @@ resolver = "3"
 [workspace.dependencies]
 chrono = { version = "^0.4.42", features = ["serde"] } #unified
 db = { path = "db", version = "^0.1.0" } #unified
+image = "^0.25.9" #unified
+itertools = "^0.14.0" #unified
 jiff = { version = "^0.2.16", default-features = false, features = ["serde", "std"] } #unified
 migration = { path = "migration", version = "^0.1.0" } #unified
+rand = "^0.9.2" #unified
 serde = { version = "^1.0.228", features = ["derive"] } #unified
 serde_json = "^1.0.145" #unified
+serde_path_to_error = "^0.1.20" #unified
 tokio = { version = "^1.48.0", features = ["full"] } #unified
 tracing = { version = "^0.1.43", features = ["async-await"] } #unified
 types = { path = "types", version = "^0.1.0" } #unified
