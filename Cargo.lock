@@ -1669,6 +1669,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "color-eyre",
+ "itertools",
  "jiff",
  "migration",
  "sea-orm",
@@ -8411,6 +8412,7 @@ dependencies = [
  "chrono",
  "dioxus-stores",
  "jiff",
+ "rand 0.9.2",
  "serde",
  "serde_json",
  "serde_with",
@@ -8455,6 +8457,7 @@ dependencies = [
  "sea-orm",
  "serde",
  "serde_json",
+ "serde_path_to_error",
  "tokio",
  "tracing",
  "types",

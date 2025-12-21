@@ -11,7 +11,7 @@ use std::{
     io::{BufReader, Cursor},
     sync::LazyLock,
 };
-use tracing::{Instrument as _, debug_span, error, info, warn};
+use tracing::{Instrument as _, debug, debug_span, error, info, warn};
 
 pub(crate) static CERT: &[u8] = include_bytes!("../../server.crt");
 pub(crate) static KEY: &[u8] = include_bytes!("../../server.key");
@@ -124,6 +124,7 @@ async fn recipe(
 ) -> Result<axum::Json<types::Recipe>> {
     if let Ok(custom) = db::queries::recipes::get_recipe(db().await, &recipe_id).await {
         info!(recipe_id = recipe_id, "Found custom recipe");
+        debug!(recipe = ?custom, "Full recipe json");
 
         return Ok(axum::Json(custom));
     }

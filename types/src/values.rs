@@ -374,6 +374,7 @@ impl ReferenceValue {
 impl CapabilitySetting {
     pub fn keep_warm_default() -> Self {
         Self {
+            uid: Default::default(),
             reference_setting: ReferenceSettingId::KeepWarm.reference_setting(),
             value: SettingValue::Boolean {
                 text: "placeholder".to_owned(),

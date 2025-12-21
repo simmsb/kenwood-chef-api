@@ -6,6 +6,7 @@ edition = "2024"
 [dependencies]
 anyhow = "1.0.100"
 color-eyre = "0.6.5"
+itertools = "0.14.0"
 jiff = { workspace = true } #unified
 migration = { workspace = true } #unified
 sea-orm = { version = "^2.0.0-rc", features = ["sqlx-sqlite", "macros", "runtime-tokio-rustls", "with-json"] }

@@ -1,15 +1,15 @@
 use core::str::FromStr;
 use rand::distr::SampleString;
-use std::string::ToString;
+use std::{string::ToString, time::Duration};
 
-use dioxus::{
-    fullstack::{Form, MultipartFormData},
-    prelude::*,
+use dioxus::{fullstack::MultipartFormData, prelude::*};
+use dioxus_primitives::{
+    checkbox::CheckboxState,
+    toast::{consume_toast, ToastOptions},
 };
-use dioxus_primitives::checkbox::CheckboxState;
 use itertools::Itertools;
-use types::traits::*;
 use types::KnownOptions;
+use types::{traits::*, UID};
 
 use crate::components::{
     button::{Button, ButtonVariant},
@@ -53,6 +53,7 @@ fn PreparationSelector(
             SelectList {
                 for (idx , preparation) in matching_input().iter().enumerate() {
                     SelectOption::<types::ReferencePreparation> {
+                        key: "{preparation.uid}",
                         index: idx,
                         value: preparation.clone(),
                         text_value: preparation.name.clone(),
@@ -234,7 +235,9 @@ fn Ingredient(
                 div { class: "flex flex-col justify-start gap-4",
 
                     for (idx , preparation) in ingredient.reference_preparations().iter().enumerate() {
-                        div { class: "flex flex-row gap-4",
+                        div {
+                            class: "flex flex-row gap-4",
+                            key: "{preparation.uid()}",
                             PreparationSelector { preparation, preparations_matcher }
 
                             Button {
@@ -580,7 +583,9 @@ fn StepCapability(capability: Store<types::StepCapability>) -> Element {
                 div { class: "flex flex-col justify-start gap-4",
 
                     for (idx , setting) in capability.settings().iter().enumerate() {
-                        div { class: "flex flex-row gap-4",
+                        div {
+                            class: "flex flex-row gap-4",
+                            key: "{setting.uid()}",
 
                             Button {
                                 variant: ButtonVariant::Outline,
@@ -816,8 +821,10 @@ fn Step(
                 Label { html_for: "preparations", "Preparations" }
                 div { class: "flex flex-col justify-start gap-4",
 
-                    for ingredient in step.ingredients().iter() {
-                        div { class: "flex flex-row gap-4",
+                    for (idx , ingredient) in step.ingredients().iter().enumerate() {
+                        div {
+                            class: "flex flex-row gap-4",
+                            key: "{ingredient.uid()}",
                             StepIngredient { ingredient, ingredients }
 
                             Button {
@@ -843,6 +850,7 @@ fn Step(
                             {
                                 step.ingredients()
                                     .push(types::StepIngredient {
+                                        uid: UID::new(),
                                         ingredient_idx: 0,
                                         quantity: first_ingredient_quantity,
                                     });
@@ -953,6 +961,14 @@ pub fn EditRecipeInner(recipe: Store<types::Recipe>) -> Element {
                         e.prevent_default();
 
                         upload_image(e.into()).await.unwrap();
+
+                        let toast_api = consume_toast();
+
+                        toast_api
+                            .info(
+                                "Uploaded image".to_owned(),
+                                ToastOptions::new().duration(Duration::from_secs(3)),
+                            );
                     },
 
                     input { name: "id", hidden: true, value: recipe.id() }
@@ -975,7 +991,7 @@ pub fn EditRecipeInner(recipe: Store<types::Recipe>) -> Element {
                 Label { html_for: "recipe_name", "Name" }
                 Input {
                     id: "recipe_name",
-                    value: recipe.name().clone(),
+                    value: recipe.name(),
                     oninput: move |e: FormEvent| recipe.name().set(e.value()),
                 }
 
@@ -1064,7 +1080,10 @@ pub fn EditRecipeInner(recipe: Store<types::Recipe>) -> Element {
                         div { class: "flex flex-col gap-4 p-4",
 
                             for (idx , ingredient) in recipe.ingredients().iter().enumerate() {
-                                div { class: "flex flex-row gap-4",
+                                div {
+                                    class: "flex flex-row gap-4",
+                                    key: "{ingredient.uid()}",
+
                                     Ingredient {
                                         ingredient,
                                         ingredients_matcher,
@@ -1092,6 +1111,7 @@ pub fn EditRecipeInner(recipe: Store<types::Recipe>) -> Element {
                                     recipe
                                         .ingredients()
                                         .push(types::RecipeIngredient {
+                                            uid: UID::new(),
                                             quantity: types::Quantity {
                                                 amount: Some(1.0),
                                                 reference_unit: types::ReferenceUnit::gram(),
@@ -1111,7 +1131,9 @@ pub fn EditRecipeInner(recipe: Store<types::Recipe>) -> Element {
                     TabContent { index: 1usize, value: "steps",
                         div { class: "flex flex-col gap-4 p-4",
                             for (idx , step) in recipe.steps().iter().enumerate() {
-                                div { class: "flex flex-row gap-4",
+                                div {
+                                    class: "flex flex-row gap-4",
+                                    key: "{step.uid()}",
                                     Step {
                                         idx,
                                         step,
@@ -1139,6 +1161,7 @@ pub fn EditRecipeInner(recipe: Store<types::Recipe>) -> Element {
                                     recipe
                                         .steps()
                                         .push(types::RecipeStep {
+                                            uid: UID::new(),
                                             capability: None,
                                             ingredients: vec![],
                                             source_text: None,
@@ -1204,6 +1227,16 @@ pub fn NewRecipe() -> Element {
                         let _ = save_recipe_server(recipe, true).await;
 
                         nav.replace(crate::Route::EditRecipe { id });
+
+                        let toast_api = consume_toast();
+
+                        toast_api
+                            .info(
+                                "Created recipe".to_owned(),
+                                ToastOptions::new()
+                                    .description("Redirected to the editor page")
+                                    .duration(Duration::from_secs(3)),
+                            );
                     }
                 },
 
@@ -1218,15 +1251,50 @@ pub fn EditRecipe(id: String) -> Element {
     let recipe_initial = use_loader(move || recipe_server(id.clone()))?.cloned();
     let recipe = use_store(move || recipe_initial);
 
+    let nav = use_navigator();
+
     rsx! {
         EditRecipeInner { recipe }
 
         div { class: "flex flex-row justify-end gap-4",
             Button {
                 onclick: move |_| {
+                    let mut recipe = recipe();
+                    let id = UID::new().0;
+                    recipe.id = id.clone();
+                    async move {
+                        let _ = save_recipe_server(recipe, true).await;
+
+                        nav.replace(crate::Route::EditRecipe { id });
+
+                        let toast_api = consume_toast();
+
+                        toast_api
+                            .info(
+                                "Cloned recipe".to_owned(),
+                                ToastOptions::new()
+                                    .description("Redirected to the editor page")
+                                    .duration(Duration::from_secs(3)),
+                            );
+                    }
+                },
+
+                "Clone recipe"
+            }
+
+            Button {
+                onclick: move |_| {
                     let recipe = recipe();
                     async {
                         let _ = save_recipe_server(recipe, false).await;
+
+                        let toast_api = consume_toast();
+
+                        toast_api
+                            .info(
+                                "Edited recipe".to_owned(),
+                                ToastOptions::new().duration(Duration::from_secs(3)),
+                            );
                     }
                 },
 
@@ -1234,12 +1302,6 @@ pub fn EditRecipe(id: String) -> Element {
             }
         }
     }
-}
-
-#[derive(serde::Serialize, serde::Deserialize)]
-struct UploadImage {
-    id: String,
-    data: Vec<u8>,
 }
 
 #[server]

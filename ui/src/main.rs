@@ -2,7 +2,7 @@
 // need dioxus
 use dioxus::prelude::*;
 
-use views::{EditRecipe, Home, Navbar, NewRecipe};
+use views::{EditRecipe, Home, Ingest, Navbar, NewRecipe};
 
 /// Define a components module that contains all shared components for our app.
 mod components;
@@ -21,12 +21,14 @@ pub mod db;
 #[rustfmt::skip]
 enum Route {
     #[layout(Navbar)]
-        #[route("/")]
-        Home {},
-        #[route("/edit/:id")]
-        EditRecipe { id: String },
-        #[route("/new")]
-        NewRecipe {},
+    #[route("/")]
+    Home {},
+    #[route("/edit/:id")]
+    EditRecipe { id: String },
+    #[route("/new")]
+    NewRecipe {},
+    #[route("/ingest")]
+    Ingest {},
 }
 
 // We can import assets in dioxus with the `asset!` macro. This macro takes a path to an asset relative to the crate root.
@@ -59,7 +61,7 @@ fn App() -> Element {
 
         // The router component renders the route enum we defined above. It will handle synchronization of the URL and render
         // the layouts and components for the active route.
-        Router::<Route> {}
+        components::toast::ToastProvider { Router::<Route> {} }
 
         div { class: "mt-10" }
     }

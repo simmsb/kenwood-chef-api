@@ -21,6 +21,13 @@ pub fn Navbar() -> Element {
 
                 "New recipe"
             }
+
+            LinkButton {
+                variant: crate::components::button::ButtonVariant::Secondary,
+                to: Route::Ingest {},
+
+                "Ingest data"
+            }
                 // }
         }
 

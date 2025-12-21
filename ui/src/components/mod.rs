@@ -19,4 +19,5 @@ pub mod searching_select;
 pub mod select;
 pub mod tabs;
 pub mod textarea;
+pub mod toast;
 pub mod toggle;

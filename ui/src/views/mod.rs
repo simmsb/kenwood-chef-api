@@ -6,3 +6,6 @@ pub use edit_recipe::{EditRecipe, NewRecipe};
 
 mod navbar;
 pub use navbar::Navbar;
+
+mod ingest;
+pub use ingest::Ingest;

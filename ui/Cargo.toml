@@ -24,6 +24,7 @@ rand = "0.9.2"
 sea-orm = { version = "^2.0.0-rc", features = ["sqlx-sqlite", "macros", "runtime-tokio-rustls", "with-json"], optional = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
+serde_path_to_error = "0.1.20"
 tokio = { workspace = true, optional = true } #unified
 tracing = { workspace = true } #unified
 types = { workspace = true } #unified
