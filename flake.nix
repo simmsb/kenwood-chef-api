@@ -16,6 +16,7 @@
     flake-parts.lib.mkFlake { inherit inputs; } {
       imports = [
         inputs.devshell.flakeModule
+        inputs.nix-oci.flakeModule
         inputs.treefmt-nix.flakeModule
       ];
       systems = [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" "x86_64-darwin" ];
@@ -119,10 +120,11 @@
 
           packages.ui = ui_server;
 
-          # oci.containers.default = {
-          #   package = self'.packages.ui;
-          # };
+          oci.containers.default = {
+            package = config.packages.ui;
+          };
         };
+      oci.enabled = true;
       flake = { };
     };
 }
