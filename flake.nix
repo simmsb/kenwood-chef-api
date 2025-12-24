@@ -10,6 +10,8 @@
     nix-oci.url = "github:dauliac/nix-oci";
     crane.url = "github:ipetkov/crane";
     treefmt-nix.url = "github:numtide/treefmt-nix";
+    process-compose-flake.url = "github:Platonic-Systems/process-compose-flake";
+    flake-root.url = "github:srid/flake-root";
   };
 
   outputs = inputs@{ flake-parts, ... }:
@@ -18,6 +20,8 @@
         inputs.devshell.flakeModule
         inputs.nix-oci.flakeModule
         inputs.treefmt-nix.flakeModule
+        inputs.process-compose-flake.flakeModule
+        inputs.flake-root.flakeModule
       ];
       systems = [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" "x86_64-darwin" ];
       perSystem = { config, self', inputs', pkgs, system, lib, ... }:
@@ -57,6 +61,8 @@
               (craneLib.fileset.commonCargoSources unfilteredRoot)
               (lib.fileset.fileFilter (file: file.hasExt "css") unfilteredRoot)
               (lib.fileset.maybeMissing ./ui)
+              (lib.fileset.maybeMissing ./server.crt)
+              (lib.fileset.maybeMissing ./server.key)
             ];
           };
           commonArgs = {
@@ -69,7 +75,6 @@
             ];
 
             buildInputs = [
-
             ] ++ lib.optionals pkgs.stdenv.isDarwin [
               # Additional darwin specific inputs can be set here
               pkgs.libiconv
@@ -99,6 +104,16 @@
             }
           );
 
+          api_server = craneLib.buildPackage (
+            commonArgs
+            // {
+              pname = "server";
+              version = "0.0.1";
+              cargoExtraArgs = "-p kenwood-chef-api";
+              meta.mainProgram = "kenwood-chef-api";
+            }
+          );
+
         in
         {
           _module.args.pkgs = import inputs.nixpkgs {
@@ -116,12 +131,50 @@
               craneLib.clippy
               craneLib.rustfmt
             ]);
+
+            env = [
+              { name = "FLAKE_ROOT"; eval = "$(${lib.getExe config.flake-root.package})"; }
+              { name = "DATABASE_URL"; eval = "sqlite://$FLAKE_ROOT/db.sqlite?mode=rwc"; }
+            ];
           };
 
-          packages.ui = ui_server;
+          packages = {
+            ui = ui_server;
+            api = api_server;
+          };
+
+          process-compose.all = {
+            cli = {
+              environment.PC_DISABLE_TUI = true;
+              options = {
+                no-server = true;
+              };
+            };
+            settings.environment = {
+              DATABASE_URL = "sqlite:///config/db.sqlite?mode=rwc";
+            };
+            settings.processes = {
+              db_init.command = ''
+                ${pkgs.busybox}/bin/mkdir -p $(echo "$DATABASE_URL" | ${pkgs.busybox}/bin/sed 's|.*:///||; s|/[^/]*$||')
+                echo | ${lib.getExe pkgs.sqlite} $DATABASE_URL 
+              '';
+              ui.command = "${lib.getExe config.packages.ui}";
+              ui.depends_on."db_init".condition = "process_completed_successfully";
+              ui.environment = {
+                IP = "0.0.0.0";
+                PORT = "8080";
+              };
+              api.command = "${lib.getExe config.packages.api} server";
+              api.depends_on."db_init".condition = "process_completed_successfully";
+            };
+          };
 
           oci.containers.default = {
-            package = config.packages.ui;
+            package = { version = "0.0.1"; } // pkgs.writeShellApplication {
+              name = "kenwood-api";
+              text = "${lib.getExe config.packages.all} up";
+            };
+            isRoot = true;
           };
         };
       oci.enabled = true;
