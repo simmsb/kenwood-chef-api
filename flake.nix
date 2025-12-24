@@ -170,10 +170,16 @@
           };
 
           oci.containers.default = {
+            dependencies = [
+              pkgs.sqlite
+              pkgs.busybox
+            ];
             package = { version = "0.0.1"; } // pkgs.writeShellApplication {
               name = "kenwood-api";
               text = "${lib.getExe config.packages.all} up";
             };
+            registry = "ghcr.io/simmsb";
+            push = true;
             isRoot = true;
           };
         };
