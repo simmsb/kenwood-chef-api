@@ -6,6 +6,14 @@ use crate::Route;
 
 #[component]
 pub fn RecipeItem(recipe: types::Recipe) -> Element {
+    let recipe_id = recipe.id.clone();
+    let image = use_loader(move || image(recipe_id.clone()))?;
+    let image = use_memo(move || {
+        image
+            .cloned()
+            .map(|x| photon_rs::PhotonImage::new_from_byteslice(x).get_base64())
+    });
+
     rsx! {
         Card { class: "w-full",
 
@@ -27,10 +35,23 @@ pub fn RecipeItem(recipe: types::Recipe) -> Element {
                 img {
                     width: "100px",
                     height: "100px",
-                    src: "https://media.fresco-kitchenos.com/media/images/recipes/{recipe.id}/hero?width=100&height=100",
+                    src: image,
+                    // src: "https://media.fresco-kitchenos.com/media/images/recipes/{recipe.id}/hero?width=100&height=100",
                                 // loading: "lazy"
                 }
             }
         }
     }
+}
+
+#[server]
+async fn image(recipe_id: String) -> Result<Option<Vec<u8>>> {
+    use dioxus::logger::tracing::{info_span, Instrument as _};
+
+    let image = db::queries::images::get_image(crate::db::db(), &recipe_id)
+        .instrument(info_span!("Loading image"))
+        .await
+        .ok();
+
+    Ok(image)
 }

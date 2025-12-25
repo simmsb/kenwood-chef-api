@@ -7,10 +7,7 @@ use axum::{
 use color_eyre::eyre::{Context, OptionExt as _};
 use http_body_util::BodyExt;
 use sea_orm::DatabaseConnection;
-use std::{
-    io::Cursor,
-    sync::LazyLock,
-};
+use std::{io::Cursor, sync::LazyLock};
 use tracing::{Instrument as _, debug, debug_span, error, info, warn};
 
 pub(crate) static CERT: &[u8] = include_bytes!("../../server.crt");
@@ -250,11 +247,36 @@ pub async fn run() -> color_eyre::Result<()> {
         )
         .fallback(axum::routing::any(api_fallback));
 
-    let addr = std::net::SocketAddr::from(([0, 0, 0, 0], 443));
+    let t_443 = tokio::spawn({
+        let app = app.clone();
 
-    axum_server::bind_rustls(addr, rustls)
-        .serve(app.into_make_service())
-        .await?;
+        async move {
+            let addr = std::net::SocketAddr::from(([0, 0, 0, 0], 443));
+
+            axum_server::bind_rustls(addr, rustls)
+                .serve(app.into_make_service())
+                .await?;
+
+            Ok::<(), color_eyre::Report>(())
+        }
+    });
+
+    let t_8081 = tokio::spawn({
+        let app = app.clone();
+
+        async move {
+            let addr = std::net::SocketAddr::from(([0, 0, 0, 0], 8081));
+
+            axum_server::bind(addr)
+                .serve(app.into_make_service())
+                .await?;
+
+            Ok::<(), color_eyre::Report>(())
+        }
+    });
+
+    t_443.await??;
+    t_8081.await??;
 
     Ok(())
 }
