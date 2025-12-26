@@ -15,7 +15,7 @@ options:
   env_vars: []
   PGID: 0
   PUID: 0
-image: ghcr.io/simmsb/kenwood-chef-api/{arch}
+image: ghcr.io/simmsb/kenwood-api/{arch}
 environment:
   DATABASE_URL: /config/db.sqlite?mode=rwc
 ports:
