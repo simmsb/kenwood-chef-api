@@ -53,7 +53,6 @@ fn PreparationSelector(
             SelectList {
                 for (idx , preparation) in matching_input().iter().enumerate() {
                     SelectOption::<types::ReferencePreparation> {
-                        key: "{preparation.uid}",
                         index: idx,
                         value: preparation.clone(),
                         text_value: preparation.name.clone(),
@@ -235,9 +234,7 @@ fn Ingredient(
                 div { class: "flex flex-col justify-start gap-4",
 
                     for (idx , preparation) in ingredient.reference_preparations().iter().enumerate() {
-                        div {
-                            class: "flex flex-row gap-4",
-                            key: "{preparation.uid()}",
+                        div { class: "flex flex-row gap-4",
                             PreparationSelector { preparation, preparations_matcher }
 
                             Button {
@@ -717,6 +714,9 @@ fn StepIngredient(
                                 on_value_change: move |v| {
                                     if let Some(v) = v {
                                         ingredient.ingredient_idx().set(v);
+                                        if let Some(current_ingredient_) = current_ingredient() {
+                                            ingredient.quantity().set(current_ingredient_.quantity);
+                                        }
                                         recipe_ingredient.set(current_ingredient());
                                     }
                                 },
@@ -742,29 +742,40 @@ fn StepIngredient(
                 }
             }
 
-            CardContent { class: "flex flex-col gap-4 justify-center",
+            div { class: "flex flex-row gap-4",
+                CardContent { class: "flex flex-col gap-4 justify-center",
 
-                Label { html_for: "use_custom_quantity", "Use custom quantity" }
-                Checkbox {
-                    name: "use_custom_quantity",
-                    default_checked: using_custom_quantity(),
+                    Label { html_for: "use_custom_quantity", "Use custom quantity" }
+                    Checkbox {
+                        name: "use_custom_quantity",
+                        default_checked: using_custom_quantity(),
 
-                    on_checked_change: move |e: CheckboxState| {
-                        let checked: bool = e.into();
+                        on_checked_change: move |e: CheckboxState| {
+                            let checked: bool = e.into();
 
-                        if checked {
-                            force_show_quantity.set(true);
-                        } else {
-                            force_show_quantity.set(false);
-                            if let Some(current_ingredient_) = current_ingredient() {
-                                ingredient.write().quantity = current_ingredient_.quantity;
+                            if checked {
+                                force_show_quantity.set(true);
+                            } else {
+                                force_show_quantity.set(false);
+                                if let Some(current_ingredient_) = current_ingredient() {
+                                    ingredient.quantity().set(current_ingredient_.quantity);
+                                }
                             }
+                        },
+                    }
+
+                    if show_quantity() {
+                        Quantity {
+                            quantity: ingredient.quantity(),
+                            allowed_units,
                         }
-                    },
+                    }
                 }
 
-                if show_quantity() {
-                    Quantity { quantity: ingredient.quantity(), allowed_units }
+                CardContent { class: "flex flex-col gap-4 justify-center",
+
+                    Label { html_for: "quantity", "Quantity" }
+                    span { "{ingredient.quantity().text()}" }
                 }
             }
         }
@@ -776,12 +787,9 @@ fn Step(
     idx: usize,
     step: Store<types::RecipeStep>,
     ingredients: Store<Vec<types::RecipeIngredient>>,
-    // ingredients_matcher: Memo<FuzzyFinder<types::Ingredient>>,
-    // preparations_matcher: Memo<FuzzyFinder<types::ReferencePreparation>>,
 ) -> Element {
     trace!("Render step");
-    // let ingredient_search_input = use_signal(|| String::new());
-    // let unit_search_input = use_signal(|| String::new());
+
     rsx! {
         Card { class: "grow",
             CardHeader { "Step {idx + 1}" }
@@ -825,7 +833,13 @@ fn Step(
                         div {
                             class: "flex flex-row gap-4",
                             key: "{ingredient.uid()}",
-                            StepIngredient { ingredient, ingredients }
+
+                            SuspenseBoundary {
+                                fallback: |_| rsx! {
+                                    div { class: "flex items-center justify-center w-full h-full", "Loading..." }
+                                },
+                                StepIngredient { ingredient, ingredients }
+                            }
 
                             Button {
                                 class: "place-self-end",
@@ -1084,10 +1098,15 @@ pub fn EditRecipeInner(recipe: Store<types::Recipe>) -> Element {
                                     class: "flex flex-row gap-4",
                                     key: "{ingredient.uid()}",
 
-                                    Ingredient {
-                                        ingredient,
-                                        ingredients_matcher,
-                                        preparations_matcher,
+                                    SuspenseBoundary {
+                                        fallback: |_| rsx! {
+                                            div { class: "flex items-center justify-center w-full h-full", "Loading..." }
+                                        },
+                                        Ingredient {
+                                            ingredient,
+                                            ingredients_matcher,
+                                            preparations_matcher,
+                                        }
                                     }
 
                                     div { class: "place-self-end",

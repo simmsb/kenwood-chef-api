@@ -3,7 +3,8 @@ use std::collections::HashMap;
 use color_eyre::Result;
 use itertools::Itertools;
 use sea_orm::{
-    ActiveValue::{NotSet, Set}, DatabaseConnection, EntityTrait,
+    ActiveValue::{NotSet, Set},
+    DatabaseConnection, EntityTrait,
 };
 use serde::{Deserialize, Serialize};
 

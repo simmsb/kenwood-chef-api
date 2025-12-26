@@ -27,7 +27,6 @@ pub async fn list_preparations(
         .into_iter()
         .map(|r| {
             Ok(types::ReferencePreparation {
-                uid: types::UID::new(),
                 id: r.id,
                 name: r.name,
             })

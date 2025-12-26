@@ -4,11 +4,8 @@ use color_eyre::eyre::eyre;
 use sea_orm::EntityLoaderTrait as _;
 use sea_orm::QueryFilter;
 use sea_orm::{ActiveModelBehavior as _, EntityTrait as _};
+use sea_orm::{ActiveValue::NotSet, ColumnTrait as _, EntityLoaderTrait};
 use sea_orm::{ActiveValue::Set, DatabaseConnection};
-use sea_orm::{
-    ActiveValue::NotSet,
-    ColumnTrait as _, EntityLoaderTrait,
-};
 
 use crate::entities::{self, author, prelude::*, recipe};
 

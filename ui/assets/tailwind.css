@@ -206,6 +206,15 @@
   .hidden {
     display: none;
   }
+  .h-full {
+    height: 100%;
+  }
+  .max-h-24 {
+    max-height: calc(var(--spacing) * 24);
+  }
+  .max-h-100 {
+    max-height: calc(var(--spacing) * 100);
+  }
   .w-3\/4 {
     width: calc(3/4 * 100%);
   }
@@ -247,6 +256,9 @@
   }
   .place-self-end {
     place-self: end;
+  }
+  .overflow-y-scroll {
+    overflow-y: scroll;
   }
   .p-1 {
     padding: calc(var(--spacing) * 1);

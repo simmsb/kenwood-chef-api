@@ -50,7 +50,7 @@ pub fn SelectValue(props: SelectValueProps) -> Element {
 pub fn SelectList(props: SelectListProps) -> Element {
     rsx! {
         select::SelectList {
-            class: "select-list",
+            class: "select-list max-h-100 overflow-y-scroll",
             id: props.id,
             attributes: props.attributes,
             {props.children}

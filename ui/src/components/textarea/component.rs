@@ -72,7 +72,6 @@ pub fn Textarea(
             oncut: move |e| _ = oncut.map(|callback| callback(e)),
             onpaste: move |e| _ = onpaste.map(|callback| callback(e)),
             ..attributes,
-            {children}
         }
     }
 }

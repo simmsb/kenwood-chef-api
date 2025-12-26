@@ -32,13 +32,7 @@ pub fn RecipeItem(recipe: types::Recipe) -> Element {
             }
 
             CardContent {
-                img {
-                    width: "100px",
-                    height: "100px",
-                    src: image,
-                    // src: "https://media.fresco-kitchenos.com/media/images/recipes/{recipe.id}/hero?width=100&height=100",
-                                // loading: "lazy"
-                }
+                img { width: "100px", height: "100px", src: image }
             }
         }
     }

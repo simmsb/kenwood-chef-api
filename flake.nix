@@ -84,7 +84,6 @@
             commonArgs
             // {
               pname = "ui";
-              version = "0.0.1";
               cargoArtifacts = null;
               # cargoArtifacts = craneLib.buildDepsOnly (commonArgs // {
               #   buildPhaseCargoCommand = ''
@@ -108,7 +107,6 @@
             commonArgs
             // {
               pname = "server";
-              version = "0.0.1";
               cargoExtraArgs = "-p kenwood-chef-api";
               meta.mainProgram = "kenwood-chef-api";
             }
@@ -174,7 +172,7 @@
               pkgs.sqlite
               pkgs.busybox
             ];
-            package = { version = "0.0.1"; } // pkgs.writeShellApplication {
+            package = { version = config.packages.api.version; } // pkgs.writeShellApplication {
               name = "kenwood-api";
               text = "${lib.getExe config.packages.all} up";
             };

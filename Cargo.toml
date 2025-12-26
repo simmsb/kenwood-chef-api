@@ -25,3 +25,4 @@ types = { path = "types", version = "^0.1.0" } #unified
 
 [workspace.package]
 rust-version = "1.88.0"
+version = "0.1.0"
