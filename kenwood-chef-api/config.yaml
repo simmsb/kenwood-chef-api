@@ -1,5 +1,5 @@
 name: Kenwood Chef API
-version: 0.1.0
+version: 0.1.2
 slug: kenwood-chef-api
 description: API Replacement for the Kenwood chef
 url: https://github.com/simmsb/kenwood-chef-api

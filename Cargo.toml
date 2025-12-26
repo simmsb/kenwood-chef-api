@@ -26,7 +26,7 @@ types = { path = "types", version = "^0.1.0" } #unified
 
 [workspace.package]
 rust-version = "1.88.0"
-version = "0.1.1"
+version = "0.1.2"
 
 [patch.crates-io]
 dioxus = { git = "https://github.com/simmsb/dioxus" }
