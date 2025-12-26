@@ -23,7 +23,7 @@ jiff = { workspace = true } #unified
 nucleo-matcher = "0.3.1"
 photon-rs = "0.3.3"
 rand = { workspace = true } #unified
-reqwest = { version = "0.12.28", optional = true, features = ["blocking"] }
+reqwest = { workspace = true, optional = true, features = ["json", "rustls-tls"] } #unified
 sea-orm = { version = "^2.0.0-rc.22", features = ["sqlx-sqlite", "macros", "runtime-tokio-rustls", "with-json"], optional = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
