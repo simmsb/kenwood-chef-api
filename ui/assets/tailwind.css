@@ -209,9 +209,6 @@
   .h-full {
     height: 100%;
   }
-  .max-h-24 {
-    max-height: calc(var(--spacing) * 24);
-  }
   .max-h-100 {
     max-height: calc(var(--spacing) * 100);
   }

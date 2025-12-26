@@ -18,7 +18,7 @@ options:
   PUID: 0
 image: ghcr.io/simmsb/kenwood-api
 environment:
-  DATABASE_URL: /config/db.sqlite?mode=rwc
+  DATABASE_URL: /data/db.sqlite?mode=rwc
 ports:
   443/tcp: 443
   8080/tcp: 8080
