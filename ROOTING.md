@@ -147,22 +147,21 @@ interesting on the filesystem:
 
 The device runs the following interesting systemd services:
 
-A53.service
+#### A53.service
 
-:   Handles drawing the GUI using [Embedded
-    Wizard](https://embedded-wizard.de/), kicks off some other services
-    (TODO: list these), handles AWS Cognito auth, fetches recipes from
-    the Fresco API, talks to the Wifi ESP32 and issues commands over
-    DBUS to (TODO: which).
+Handles drawing the GUI using [Embedded Wizard](https://embedded-wizard.de/),
+    kicks off some other services (TODO: list these), handles AWS Cognito auth,
+    fetches recipes from the Fresco API, talks to the Wifi ESP32 and issues
+    commands over DBUS to (TODO: which).
 
-KitchenOS Agent.service
+#### KitchenOS Agent.service
 
-:   (TODO: what does this actually do?)
+(TODO: what does this actually do?)
 
-aws-iot-proxy
+#### aws-iot-proxy
 
-:   Not a systemd service for some reason, but instead started by
-    A53.service. (TODO: what does this do)
+Not a systemd service for some reason, but instead started by A53.service.
+    (TODO: what does this do)
 
 TODO: which service talks to the M7, document it the 'M7"
 microcontroller that runs the rest of the hardware.
@@ -179,11 +178,38 @@ filesystem had varying dates and there were a few logfiles in the root
 filesystems) I decided to simply replace the password hash in
 `/etc/shadow`.
 
-<figure>
-<pre><code>TODO: original /etc/shadow
-    </code></pre>
-<figcaption><p>Original <code>/etc/shadow</code></p></figcaption>
-</figure>
+```
+root:$6$fMdeOBXQ3zeBy649$qQQLaM5Hfr7iCyR9G9//27Bm9K06dJgaP0mBXxNH6DBIehxbhn3x7imnHpPmAGd851VWDJTG1V5k.aqLDx7FI0::0:99999:7:::
+daemon:*::0:99999:7:::
+bin:*::0:99999:7:::
+sys:*::0:99999:7:::
+sync:*::0:99999:7:::
+games:*::0:99999:7:::
+man:*::0:99999:7:::
+lp:*::0:99999:7:::
+mail:*::0:99999:7:::
+news:*::0:99999:7:::
+uucp:*::0:99999:7:::
+proxy:*::0:99999:7:::
+www-data:*::0:99999:7:::
+backup:*::0:99999:7:::
+list:*::0:99999:7:::
+irc:*::0:99999:7:::
+gnats:*::0:99999:7:::
+ntp:!:::::::
+bind:!:::::::
+systemd-bus-proxy:!:::::::
+systemd-timesync:!:::::::
+systemd-resolve:!:::::::
+systemd-network:!:::::::
+rpc:!:::::::
+sshd:!:::::::
+avahi:!:::::::
+messagebus:!:::::::
+admin:$6$OlLD/Smnydwc8DGw$PbDOBrG78rgzXeUNnG3tpA0QH7/vbSppqjH3yx0iwBIDshH4wBwpaPGMaD2spR/Dwb2MHK/pIFTCeOjN7AKd91::0:99999:7:::
+nobody:*::0:99999:7:::
+
+```
 
 I simply replaced the hash with:
 
@@ -218,7 +244,7 @@ TOOD: save systemd service
 And of course, running fbdoom:
 
 https://github.com/user-attachments/assets/8e346418-98b7-467b-9fd3-e3b810028f7f
-
+    
 ## Custom API server
 
 Next I wanted to MITM the API used by the device, to do that I first
