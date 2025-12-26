@@ -3,7 +3,8 @@ version: 0.1.0
 slug: kenwood-chef-api
 description: API Replacement for the Kenwood chef
 url: https://github.com/simmsb/kenwood-chef-api
-startup: services
+ingress: true
+ingress_port: 8080
 init: false
 arch:
 - aarch64
