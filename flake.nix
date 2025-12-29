@@ -12,6 +12,10 @@
     treefmt-nix.url = "github:numtide/treefmt-nix";
     process-compose-flake.url = "github:Platonic-Systems/process-compose-flake";
     flake-root.url = "github:srid/flake-root";
+    dioxus.url = "github:simmsb/dioxus";
+    dioxus.inputs.flake-parts.follows = "flake-parts";
+    dioxus.inputs.nixpkgs.follows = "nixpkgs";
+    dioxus.inputs.rust-overlay.follows = "rust-overlay";
   };
 
   outputs = inputs@{ flake-parts, ... }:
@@ -39,6 +43,8 @@
               hash = "sha256-ElDatyOwdKwHg3bNH/1pcxKI7LXkhsotlDPQjiLHBwA=";
             };
           };
+
+          dioxus-cli = inputs.dioxus.packages.${system}.dioxus-cli;
 
           devPackages = with pkgs; [
             dioxus-cli
@@ -92,7 +98,7 @@
               #   '';
               # });
               buildPhaseCargoCommand = ''
-                DX_HOME=$(mktemp -d) dx bundle --release -p ui
+                DX_HOME=$(mktemp -d) dx bundle --web --release -p ui
               '';
               doNotPostBuildInstallCargoBinaries = true;
               installPhaseCommand = ''
@@ -111,6 +117,24 @@
               meta.mainProgram = "kenwood-chef-api";
             }
           );
+
+          caddyWithConfig = pkgs.writeShellApplication {
+            name = "caddy-with-config";
+            text = let config = pkgs.writeText "caddyfile" ''
+            0.0.0.0:8080 {
+              uri strip_prefix {header.X-External-Path}
+
+              reverse_proxy localhost:8181 {
+                header_up Accept-Encoding identity
+
+                resp_body_replace "href=\"" "href=\"{http.request.header.X-External-Path}"
+                resp_body_replace "src=\"" "src=\"{http.request.header.X-External-Path}"
+                resp_body_replace "action=\"" "action=\"{http.request.header.X-External-Path}"
+              }
+            }
+            '';
+            in "${lib.getExe pkgs.caddy} run --adapter caddyfile --config ${config}";
+          };
 
         in
         {
@@ -164,6 +188,7 @@
               };
               api.command = "${lib.getExe config.packages.api} server";
               api.depends_on."db_init".condition = "process_completed_successfully";
+              # caddy.command = "${lib.getExe caddyWithConfig}";
             };
           };
 

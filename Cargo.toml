@@ -27,3 +27,16 @@ types = { path = "types", version = "^0.1.0" } #unified
 [workspace.package]
 rust-version = "1.88.0"
 version = "0.1.1"
+
+[patch.crates-io]
+dioxus = { git = "https://github.com/simmsb/dioxus" }
+dioxus-core = { git = "https://github.com/simmsb/dioxus" }
+dioxus-stores = { git = "https://github.com/simmsb/dioxus" }
+dioxus-html = { git = "https://github.com/simmsb/dioxus" }
+dioxus-server = { git = "https://github.com/simmsb/dioxus" }
+
+# dioxus = { path = "/home/ben/dev/dioxus/packages/dioxus" }
+# dioxus-core = { path = "/home/ben/dev/dioxus/packages/core" }
+# dioxus-stores = { path = "/home/ben/dev/dioxus/packages/stores" }
+# dioxus-html = { path = "/home/ben/dev/dioxus/packages/html" }
+# dioxus-server = { path = "/home/ben/dev/dioxus/packages/fullstack-server" }

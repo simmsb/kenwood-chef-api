@@ -38,49 +38,82 @@ const MAIN_CSS: Asset = asset!("/assets/styling/main.css");
 const THEME_CSS: Asset = asset!("/assets/dx-components-theme.css");
 const TAILWIND_CSS: Asset = asset!("/assets/tailwind.css");
 
+fn main() {
+    #[cfg(feature = "server")]
+    {
+        setup_server();
+    }
+    // The `launch` function is the main entry point for a dioxus app. It takes a component and renders it with the platform feature
+    // you have enabled
+    dioxus::launch(App);
+}
+
 #[cfg(feature = "server")]
-fn setup_server() -> Option<core::convert::Infallible> {
+fn find_prefix() -> Option<String> {
     let Some(supervisor_token) = std::env::var("SUPERVISOR_TOKEN").ok() else {
         return None;
     };
 
     let client = reqwest::blocking::Client::new();
-    let Some(path_prefix) = client
+    client
         .get("http://supervisor/addons/self/info")
         .bearer_auth(supervisor_token)
         .send()
         .ok()
-        .and_then(|x| x.json::<serde_json::Map<String, serde_json::Value>>().ok())
-        .and_then(|mut x| x.remove("ingress_url"))
+        .and_then(|x| {
+            dbg!(x)
+                .json::<serde_json::Map<String, serde_json::Value>>()
+                .ok()
+        })
+        .and_then(|mut x| dbg!(x).remove("data"))
+        .and_then(|x| match x {
+            serde_json::Value::Object(s) => Some(s),
+            _ => None,
+        })
+        .and_then(|mut x| dbg!(x).remove("ingress_url"))
         .and_then(|x| match x {
             serde_json::Value::String(s) => Some(s),
             _ => None,
         })
-    else {
-        return None;
-    };
-
-    info!("Found ingress prefix: {path_prefix}");
-
-    Some(serve_server(App, path_prefix).into())
 }
 
 #[cfg(feature = "server")]
+fn setup_server() -> Option<core::convert::Infallible> {
+    let path_prefix = find_prefix().unwrap_or_else(|| "/".to_owned());
+
+    println!("Found ingress prefix: {path_prefix}");
+
+    serve_server(App, path_prefix)
+}
+
+#[derive(Clone)]
+struct BasePath(String);
+
+#[cfg(feature = "server")]
 fn serve_server(original_root: fn() -> Result<VNode, RenderError>, base_path: String) -> ! {
-    let mut cfg = ServeConfig::new();
+    let base_path_ = base_path.clone();
+    let mut cfg = ServeConfig::new().context_provider(move || BasePath(base_path_.clone()));
+    cfg.index.head_after_title = format!(
+        "<base href=\"{}\" /> {}",
+        base_path.clone(),
+        cfg.index.head_after_title
+    );
 
     let cb = move || {
         let cfg = cfg.clone();
-        let base_path = base_path.clone();
         Box::pin(async move {
-            Ok(apply_base_path(
-                dioxus_server::axum::Router::new()
-                    .serve_dioxus_application(cfg.clone(), original_root),
-                original_root,
-                cfg.clone(),
-                base_path.clone(),
-            ))
+            Ok(dioxus_server::axum::Router::new()
+                .serve_dioxus_application(cfg.clone(), original_root))
         })
+        // let base_path = base_path.clone();
+        // Box::pin(async move {
+        //     Ok(apply_base_path(dioxus_server::axum::Router::new()
+        //         .serve_dioxus_application(cfg.clone(), original_root),
+        //         original_root,
+        //         cfg,
+        //         base_path.clone(),
+        //     ))
+        // })
     };
 
     serve(cb)
@@ -88,21 +121,21 @@ fn serve_server(original_root: fn() -> Result<VNode, RenderError>, base_path: St
 
 #[cfg(feature = "server")]
 fn apply_base_path<M: 'static>(
-    router: dioxus::server::axum::Router,
+    mut router: dioxus_server::axum::Router,
     root: impl dioxus_core::ComponentFunction<(), M> + Send + Sync,
     cfg: ServeConfig,
     base_path: String,
-) -> dioxus::server::axum::Router {
+) -> dioxus_server::axum::Router {
     let base_path = base_path.trim_matches('/');
 
     // If there is a base path, nest the router under it and serve the root route manually
     // Nesting a route in axum only serves /base_path or /base_path/ not both
-    dioxus::server::axum::Router::new()
+    dioxus_server::axum::Router::new()
         .nest(&format!("/{base_path}/"), router)
         .route(
             &format!("/{base_path}"),
-            dioxus::server::axum::routing::method_routing::get(
-                |state: dioxus_fullstack::extract::State<dioxus_server::FullstackState>,
+            dioxus_fullstack::routing::method_routing::get(
+                |state: dioxus_server::axum::extract::State<dioxus_server::FullstackState>,
                  mut request: http::Request<dioxus_fullstack::body::Body>| async move {
                     // The root of the base path always looks like the root from dioxus fullstack
                     *request.uri_mut() = "/".parse().unwrap();
@@ -111,17 +144,6 @@ fn apply_base_path<M: 'static>(
             )
             .with_state(dioxus_server::FullstackState::new(cfg, root)),
         )
-}
-
-fn main() {
-    #[cfg(feature = "server")]
-    {
-        setup_server();
-    }
-
-    // The `launch` function is the main entry point for a dioxus app. It takes a component and renders it with the platform feature
-    // you have enabled
-    dioxus::launch(App);
 }
 
 /// App is the main component of our app. Components are the building blocks of dioxus apps. Each component is a function
