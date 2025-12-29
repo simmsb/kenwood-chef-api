@@ -10,8 +10,8 @@ use sea_orm::DatabaseConnection;
 use std::{io::Cursor, sync::LazyLock};
 use tracing::{Instrument as _, debug, debug_span, error, info, warn};
 
-pub(crate) static CERT: &[u8] = include_bytes!("../../server.crt");
-pub(crate) static KEY: &[u8] = include_bytes!("../../server.key");
+pub(crate) static CERT: &[u8] = include_bytes!("../../ca_stuff/server.crt");
+pub(crate) static KEY: &[u8] = include_bytes!("../../ca_stuff/server.key");
 
 pub(crate) static REQ_CLIENT: LazyLock<reqwest::Client> = LazyLock::new(reqwest::Client::new);
 

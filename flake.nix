@@ -2,12 +2,13 @@
   inputs = {
     flake-parts.url = "github:hercules-ci/flake-parts";
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    nix2container.url = "github:cameronraysmith/nix2container/185-skopeo-fix";
+    nix2container.url = "github:nlewo/nix2container";
     nix2container.inputs.nixpkgs.follows = "nixpkgs";
     rust-overlay.url = "github:oxalica/rust-overlay";
     rust-overlay.inputs.nixpkgs.follows = "nixpkgs";
     devshell.url = "github:numtide/devshell";
-    nix-oci.url = "github:dauliac/nix-oci";
+    # nix-oci.url = "github:dauliac/nix-oci";
+    # nix-oci.inputs.nix2container.follows = "nix2container";
     crane.url = "github:ipetkov/crane";
     treefmt-nix.url = "github:numtide/treefmt-nix";
     process-compose-flake.url = "github:Platonic-Systems/process-compose-flake";
@@ -22,7 +23,7 @@
     flake-parts.lib.mkFlake { inherit inputs; } {
       imports = [
         inputs.devshell.flakeModule
-        inputs.nix-oci.flakeModule
+        # inputs.nix-oci.flakeModule
         inputs.treefmt-nix.flakeModule
         inputs.process-compose-flake.flakeModule
         inputs.flake-root.flakeModule
@@ -56,6 +57,7 @@
 
           rustToolchainFor = p:
             p.rust-bin.stable.latest.default.override {
+              extensions = [ "rust-src" ];
               targets = [ "wasm32-unknown-unknown" ];
             };
           craneLib = (inputs.crane.mkLib pkgs).overrideToolchain rustToolchainFor;
@@ -120,22 +122,26 @@
 
           caddyWithConfig = pkgs.writeShellApplication {
             name = "caddy-with-config";
-            text = let config = pkgs.writeText "caddyfile" ''
-            0.0.0.0:8080 {
-              uri strip_prefix {header.X-External-Path}
+            text =
+              let
+                config = pkgs.writeText "caddyfile" ''
+                  0.0.0.0:8080 {
+                    uri strip_prefix {header.X-External-Path}
 
-              reverse_proxy localhost:8181 {
-                header_up Accept-Encoding identity
+                    reverse_proxy localhost:8181 {
+                      header_up Accept-Encoding identity
 
-                resp_body_replace "href=\"" "href=\"{http.request.header.X-External-Path}"
-                resp_body_replace "src=\"" "src=\"{http.request.header.X-External-Path}"
-                resp_body_replace "action=\"" "action=\"{http.request.header.X-External-Path}"
-              }
-            }
-            '';
-            in "${lib.getExe pkgs.caddy} run --adapter caddyfile --config ${config}";
+                      resp_body_replace "href=\"" "href=\"{http.request.header.X-External-Path}"
+                      resp_body_replace "src=\"" "src=\"{http.request.header.X-External-Path}"
+                      resp_body_replace "action=\"" "action=\"{http.request.header.X-External-Path}"
+                    }
+                  }
+                '';
+              in
+              "${lib.getExe pkgs.caddy} run --adapter caddyfile --config ${config}";
           };
 
+          nix2container = inputs.nix2container.packages.${system}.nix2container;
         in
         {
           _module.args.pkgs = import inputs.nixpkgs {
@@ -147,12 +153,20 @@
           };
 
           devshells.default = {
-            packages = devPackages ++ (with pkgs; [
-              craneLib.cargo
-              craneLib.rustc
-              craneLib.clippy
-              craneLib.rustfmt
-            ]);
+            imports = [
+              "${inputs.devshell}/extra/language/rust.nix"
+            ];
+            packages = devPackages;
+            # packages = devPackages ++ (with pkgs; [
+            #   craneLib.cargo
+            #   craneLib.rustc
+            #   craneLib.clippy
+            #   craneLib.rustfmt
+            # ]);
+
+            language.rust = {
+              packageSet = craneLib;
+            };
 
             env = [
               { name = "FLAKE_ROOT"; eval = "$(${lib.getExe config.flake-root.package})"; }
@@ -163,6 +177,14 @@
           packages = {
             ui = ui_server;
             api = api_server;
+            oci = nix2container.buildImage {
+              name = "ghcr.io/simmsb/kenwood-api";
+              tag = config.packages.api.version;
+              config = {
+                entryPoint = "${lib.getExe config.packages.all} up";
+              };
+              maxLayers = 120;
+            };
           };
 
           process-compose.all = {
@@ -173,7 +195,7 @@
               };
             };
             settings.environment = {
-              DATABASE_URL = "sqlite:///config/db.sqlite?mode=rwc";
+              DATABASE_URL = "sqlite:///data/db.sqlite?mode=rwc";
             };
             settings.processes = {
               db_init.command = ''
@@ -192,21 +214,21 @@
             };
           };
 
-          oci.containers.default = {
-            dependencies = [
-              pkgs.sqlite
-              pkgs.busybox
-            ];
-            package = { version = config.packages.api.version; } // pkgs.writeShellApplication {
-              name = "kenwood-api";
-              text = "${lib.getExe config.packages.all} up";
-            };
-            registry = "ghcr.io/simmsb";
-            push = true;
-            isRoot = true;
-          };
+          # oci.containers.default = {
+          #   dependencies = [
+          #     pkgs.sqlite
+          #     pkgs.busybox
+          #   ];
+          #   package = { version = config.packages.api.version; } // pkgs.writeShellApplication {
+          #     name = "kenwood-api";
+          #     text = "${lib.getExe config.packages.all} up";
+          #   };
+          #   registry = "ghcr.io/simmsb";
+          #   push = true;
+          #   isRoot = true;
+          # };
         };
-      oci.enabled = true;
+      # oci.enabled = true;
       flake = { };
     };
 }

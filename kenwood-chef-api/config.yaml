@@ -12,7 +12,7 @@ arch:
 - amd64
 hassio_api: true
 map:
-  - config:rw
+  - addon_config:rw
 options:
   env_vars: []
   PGID: 0
