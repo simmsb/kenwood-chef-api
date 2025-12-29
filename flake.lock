@@ -47,11 +47,11 @@
         "systems": "systems"
       },
       "locked": {
-        "lastModified": 1766967199,
-        "narHash": "sha256-COcALCTPEd/CJ655xMrL+jL1vvKzSdPwCKRiTadAV3w=",
+        "lastModified": 1766970743,
+        "narHash": "sha256-3gFeqFb5K4KxavBaQu2ydlDLGXip9RDZTh3UEJJSduE=",
         "owner": "simmsb",
         "repo": "dioxus",
-        "rev": "b674bbd9065373282f59940ea95146dc9c78f877",
+        "rev": "7e86cf6722736c42cc685d1a578251c4ad6eb25b",
         "type": "github"
       },
       "original": {

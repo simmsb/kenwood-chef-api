@@ -1138,7 +1138,7 @@ checksum = "c2459377285ad874054d797f3ccebf984978aa39129f6eafde5cdc8315b612f8"
 [[package]]
 name = "const-serialize"
 version = "0.7.2"
-source = "git+https://github.com/simmsb/dioxus#5b97cfe7ddc9db9922ac0bdc4af31a27063c73f4"
+source = "git+https://github.com/simmsb/dioxus#7e86cf6722736c42cc685d1a578251c4ad6eb25b"
 dependencies = [
  "const-serialize-macro",
  "serde",
@@ -1147,7 +1147,7 @@ dependencies = [
 [[package]]
 name = "const-serialize-macro"
 version = "0.7.2"
-source = "git+https://github.com/simmsb/dioxus#5b97cfe7ddc9db9922ac0bdc4af31a27063c73f4"
+source = "git+https://github.com/simmsb/dioxus#7e86cf6722736c42cc685d1a578251c4ad6eb25b"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1613,7 +1613,7 @@ dependencies = [
 [[package]]
 name = "dioxus"
 version = "0.7.2"
-source = "git+https://github.com/simmsb/dioxus#5b97cfe7ddc9db9922ac0bdc4af31a27063c73f4"
+source = "git+https://github.com/simmsb/dioxus#7e86cf6722736c42cc685d1a578251c4ad6eb25b"
 dependencies = [
  "dioxus-asset-resolver",
  "dioxus-cli-config",
@@ -1646,7 +1646,7 @@ dependencies = [
 [[package]]
 name = "dioxus-asset-resolver"
 version = "0.7.2"
-source = "git+https://github.com/simmsb/dioxus#5b97cfe7ddc9db9922ac0bdc4af31a27063c73f4"
+source = "git+https://github.com/simmsb/dioxus#7e86cf6722736c42cc685d1a578251c4ad6eb25b"
 dependencies = [
  "dioxus-cli-config",
  "http",
@@ -1666,7 +1666,7 @@ dependencies = [
 [[package]]
 name = "dioxus-cli-config"
 version = "0.7.2"
-source = "git+https://github.com/simmsb/dioxus#5b97cfe7ddc9db9922ac0bdc4af31a27063c73f4"
+source = "git+https://github.com/simmsb/dioxus#7e86cf6722736c42cc685d1a578251c4ad6eb25b"
 dependencies = [
  "wasm-bindgen",
 ]
@@ -1674,7 +1674,7 @@ dependencies = [
 [[package]]
 name = "dioxus-config-macro"
 version = "0.7.2"
-source = "git+https://github.com/simmsb/dioxus#5b97cfe7ddc9db9922ac0bdc4af31a27063c73f4"
+source = "git+https://github.com/simmsb/dioxus#7e86cf6722736c42cc685d1a578251c4ad6eb25b"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1683,12 +1683,12 @@ dependencies = [
 [[package]]
 name = "dioxus-config-macros"
 version = "0.7.2"
-source = "git+https://github.com/simmsb/dioxus#5b97cfe7ddc9db9922ac0bdc4af31a27063c73f4"
+source = "git+https://github.com/simmsb/dioxus#7e86cf6722736c42cc685d1a578251c4ad6eb25b"
 
 [[package]]
 name = "dioxus-core"
 version = "0.7.2"
-source = "git+https://github.com/simmsb/dioxus#5b97cfe7ddc9db9922ac0bdc4af31a27063c73f4"
+source = "git+https://github.com/simmsb/dioxus#7e86cf6722736c42cc685d1a578251c4ad6eb25b"
 dependencies = [
  "anyhow",
  "const_format",
@@ -1709,7 +1709,7 @@ dependencies = [
 [[package]]
 name = "dioxus-core-macro"
 version = "0.7.2"
-source = "git+https://github.com/simmsb/dioxus#5b97cfe7ddc9db9922ac0bdc4af31a27063c73f4"
+source = "git+https://github.com/simmsb/dioxus#7e86cf6722736c42cc685d1a578251c4ad6eb25b"
 dependencies = [
  "convert_case 0.8.0",
  "dioxus-rsx",
@@ -1721,12 +1721,12 @@ dependencies = [
 [[package]]
 name = "dioxus-core-types"
 version = "0.7.2"
-source = "git+https://github.com/simmsb/dioxus#5b97cfe7ddc9db9922ac0bdc4af31a27063c73f4"
+source = "git+https://github.com/simmsb/dioxus#7e86cf6722736c42cc685d1a578251c4ad6eb25b"
 
 [[package]]
 name = "dioxus-desktop"
 version = "0.7.2"
-source = "git+https://github.com/simmsb/dioxus#5b97cfe7ddc9db9922ac0bdc4af31a27063c73f4"
+source = "git+https://github.com/simmsb/dioxus#7e86cf6722736c42cc685d1a578251c4ad6eb25b"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
@@ -1780,7 +1780,7 @@ dependencies = [
 [[package]]
 name = "dioxus-devtools"
 version = "0.7.2"
-source = "git+https://github.com/simmsb/dioxus#5b97cfe7ddc9db9922ac0bdc4af31a27063c73f4"
+source = "git+https://github.com/simmsb/dioxus#7e86cf6722736c42cc685d1a578251c4ad6eb25b"
 dependencies = [
  "dioxus-cli-config",
  "dioxus-core",
@@ -1799,7 +1799,7 @@ dependencies = [
 [[package]]
 name = "dioxus-devtools-types"
 version = "0.7.2"
-source = "git+https://github.com/simmsb/dioxus#5b97cfe7ddc9db9922ac0bdc4af31a27063c73f4"
+source = "git+https://github.com/simmsb/dioxus#7e86cf6722736c42cc685d1a578251c4ad6eb25b"
 dependencies = [
  "dioxus-core",
  "serde",
@@ -1809,7 +1809,7 @@ dependencies = [
 [[package]]
 name = "dioxus-document"
 version = "0.7.2"
-source = "git+https://github.com/simmsb/dioxus#5b97cfe7ddc9db9922ac0bdc4af31a27063c73f4"
+source = "git+https://github.com/simmsb/dioxus#7e86cf6722736c42cc685d1a578251c4ad6eb25b"
 dependencies = [
  "dioxus-core",
  "dioxus-core-macro",
@@ -1827,7 +1827,7 @@ dependencies = [
 [[package]]
 name = "dioxus-fullstack"
 version = "0.7.2"
-source = "git+https://github.com/simmsb/dioxus#5b97cfe7ddc9db9922ac0bdc4af31a27063c73f4"
+source = "git+https://github.com/simmsb/dioxus#7e86cf6722736c42cc685d1a578251c4ad6eb25b"
 dependencies = [
  "anyhow",
  "async-stream",
@@ -1891,7 +1891,7 @@ dependencies = [
 [[package]]
 name = "dioxus-fullstack-core"
 version = "0.7.2"
-source = "git+https://github.com/simmsb/dioxus#5b97cfe7ddc9db9922ac0bdc4af31a27063c73f4"
+source = "git+https://github.com/simmsb/dioxus#7e86cf6722736c42cc685d1a578251c4ad6eb25b"
 dependencies = [
  "anyhow",
  "axum-core",
@@ -1918,7 +1918,7 @@ dependencies = [
 [[package]]
 name = "dioxus-fullstack-macro"
 version = "0.7.2"
-source = "git+https://github.com/simmsb/dioxus#5b97cfe7ddc9db9922ac0bdc4af31a27063c73f4"
+source = "git+https://github.com/simmsb/dioxus#7e86cf6722736c42cc685d1a578251c4ad6eb25b"
 dependencies = [
  "const_format",
  "convert_case 0.8.0",
@@ -1931,7 +1931,7 @@ dependencies = [
 [[package]]
 name = "dioxus-history"
 version = "0.7.2"
-source = "git+https://github.com/simmsb/dioxus#5b97cfe7ddc9db9922ac0bdc4af31a27063c73f4"
+source = "git+https://github.com/simmsb/dioxus#7e86cf6722736c42cc685d1a578251c4ad6eb25b"
 dependencies = [
  "dioxus-core",
  "tracing",
@@ -1940,7 +1940,7 @@ dependencies = [
 [[package]]
 name = "dioxus-hooks"
 version = "0.7.2"
-source = "git+https://github.com/simmsb/dioxus#5b97cfe7ddc9db9922ac0bdc4af31a27063c73f4"
+source = "git+https://github.com/simmsb/dioxus#7e86cf6722736c42cc685d1a578251c4ad6eb25b"
 dependencies = [
  "dioxus-core",
  "dioxus-signals",
@@ -1955,7 +1955,7 @@ dependencies = [
 [[package]]
 name = "dioxus-html"
 version = "0.7.2"
-source = "git+https://github.com/simmsb/dioxus#5b97cfe7ddc9db9922ac0bdc4af31a27063c73f4"
+source = "git+https://github.com/simmsb/dioxus#7e86cf6722736c42cc685d1a578251c4ad6eb25b"
 dependencies = [
  "async-trait",
  "bytes",
@@ -1981,7 +1981,7 @@ dependencies = [
 [[package]]
 name = "dioxus-html-internal-macro"
 version = "0.7.2"
-source = "git+https://github.com/simmsb/dioxus#5b97cfe7ddc9db9922ac0bdc4af31a27063c73f4"
+source = "git+https://github.com/simmsb/dioxus#7e86cf6722736c42cc685d1a578251c4ad6eb25b"
 dependencies = [
  "convert_case 0.8.0",
  "proc-macro2",
@@ -1992,7 +1992,7 @@ dependencies = [
 [[package]]
 name = "dioxus-interpreter-js"
 version = "0.7.2"
-source = "git+https://github.com/simmsb/dioxus#5b97cfe7ddc9db9922ac0bdc4af31a27063c73f4"
+source = "git+https://github.com/simmsb/dioxus#7e86cf6722736c42cc685d1a578251c4ad6eb25b"
 dependencies = [
  "dioxus-core",
  "dioxus-core-types",
@@ -2011,7 +2011,7 @@ dependencies = [
 [[package]]
 name = "dioxus-liveview"
 version = "0.7.2"
-source = "git+https://github.com/simmsb/dioxus#5b97cfe7ddc9db9922ac0bdc4af31a27063c73f4"
+source = "git+https://github.com/simmsb/dioxus#7e86cf6722736c42cc685d1a578251c4ad6eb25b"
 dependencies = [
  "axum",
  "dioxus-cli-config",
@@ -2038,7 +2038,7 @@ dependencies = [
 [[package]]
 name = "dioxus-logger"
 version = "0.7.2"
-source = "git+https://github.com/simmsb/dioxus#5b97cfe7ddc9db9922ac0bdc4af31a27063c73f4"
+source = "git+https://github.com/simmsb/dioxus#7e86cf6722736c42cc685d1a578251c4ad6eb25b"
 dependencies = [
  "dioxus-cli-config",
  "tracing",
@@ -2062,7 +2062,7 @@ dependencies = [
 [[package]]
 name = "dioxus-router"
 version = "0.7.2"
-source = "git+https://github.com/simmsb/dioxus#5b97cfe7ddc9db9922ac0bdc4af31a27063c73f4"
+source = "git+https://github.com/simmsb/dioxus#7e86cf6722736c42cc685d1a578251c4ad6eb25b"
 dependencies = [
  "dioxus-cli-config",
  "dioxus-core",
@@ -2082,7 +2082,7 @@ dependencies = [
 [[package]]
 name = "dioxus-router-macro"
 version = "0.7.2"
-source = "git+https://github.com/simmsb/dioxus#5b97cfe7ddc9db9922ac0bdc4af31a27063c73f4"
+source = "git+https://github.com/simmsb/dioxus#7e86cf6722736c42cc685d1a578251c4ad6eb25b"
 dependencies = [
  "base16",
  "digest",
@@ -2096,7 +2096,7 @@ dependencies = [
 [[package]]
 name = "dioxus-rsx"
 version = "0.7.2"
-source = "git+https://github.com/simmsb/dioxus#5b97cfe7ddc9db9922ac0bdc4af31a27063c73f4"
+source = "git+https://github.com/simmsb/dioxus#7e86cf6722736c42cc685d1a578251c4ad6eb25b"
 dependencies = [
  "proc-macro2",
  "proc-macro2-diagnostics",
@@ -2129,7 +2129,7 @@ dependencies = [
 [[package]]
 name = "dioxus-server"
 version = "0.7.2"
-source = "git+https://github.com/simmsb/dioxus#5b97cfe7ddc9db9922ac0bdc4af31a27063c73f4"
+source = "git+https://github.com/simmsb/dioxus#7e86cf6722736c42cc685d1a578251c4ad6eb25b"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2186,7 +2186,7 @@ dependencies = [
 [[package]]
 name = "dioxus-signals"
 version = "0.7.2"
-source = "git+https://github.com/simmsb/dioxus#5b97cfe7ddc9db9922ac0bdc4af31a27063c73f4"
+source = "git+https://github.com/simmsb/dioxus#7e86cf6722736c42cc685d1a578251c4ad6eb25b"
 dependencies = [
  "dioxus-core",
  "futures-channel",
@@ -2201,7 +2201,7 @@ dependencies = [
 [[package]]
 name = "dioxus-ssr"
 version = "0.7.2"
-source = "git+https://github.com/simmsb/dioxus#5b97cfe7ddc9db9922ac0bdc4af31a27063c73f4"
+source = "git+https://github.com/simmsb/dioxus#7e86cf6722736c42cc685d1a578251c4ad6eb25b"
 dependencies = [
  "askama_escape",
  "dioxus-core",
@@ -2212,7 +2212,7 @@ dependencies = [
 [[package]]
 name = "dioxus-stores"
 version = "0.7.2"
-source = "git+https://github.com/simmsb/dioxus#5b97cfe7ddc9db9922ac0bdc4af31a27063c73f4"
+source = "git+https://github.com/simmsb/dioxus#7e86cf6722736c42cc685d1a578251c4ad6eb25b"
 dependencies = [
  "dioxus-core",
  "dioxus-signals",
@@ -2223,7 +2223,7 @@ dependencies = [
 [[package]]
 name = "dioxus-stores-macro"
 version = "0.7.2"
-source = "git+https://github.com/simmsb/dioxus#5b97cfe7ddc9db9922ac0bdc4af31a27063c73f4"
+source = "git+https://github.com/simmsb/dioxus#7e86cf6722736c42cc685d1a578251c4ad6eb25b"
 dependencies = [
  "convert_case 0.8.0",
  "proc-macro2",
@@ -2234,7 +2234,7 @@ dependencies = [
 [[package]]
 name = "dioxus-web"
 version = "0.7.2"
-source = "git+https://github.com/simmsb/dioxus#5b97cfe7ddc9db9922ac0bdc4af31a27063c73f4"
+source = "git+https://github.com/simmsb/dioxus#7e86cf6722736c42cc685d1a578251c4ad6eb25b"
 dependencies = [
  "dioxus-cli-config",
  "dioxus-core",
@@ -3003,7 +3003,7 @@ dependencies = [
 [[package]]
 name = "generational-box"
 version = "0.7.2"
-source = "git+https://github.com/simmsb/dioxus#5b97cfe7ddc9db9922ac0bdc4af31a27063c73f4"
+source = "git+https://github.com/simmsb/dioxus#7e86cf6722736c42cc685d1a578251c4ad6eb25b"
 dependencies = [
  "parking_lot",
  "tracing",
@@ -4098,7 +4098,7 @@ checksum = "e49596223b9d9d4947a14a25c142a6e7d8ab3f27eb3ade269d238bb8b5c267e2"
 [[package]]
 name = "lazy-js-bundle"
 version = "0.7.2"
-source = "git+https://github.com/simmsb/dioxus#5b97cfe7ddc9db9922ac0bdc4af31a27063c73f4"
+source = "git+https://github.com/simmsb/dioxus#7e86cf6722736c42cc685d1a578251c4ad6eb25b"
 
 [[package]]
 name = "lazy_static"
@@ -4317,7 +4317,7 @@ dependencies = [
 [[package]]
 name = "manganis"
 version = "0.7.2"
-source = "git+https://github.com/simmsb/dioxus#5b97cfe7ddc9db9922ac0bdc4af31a27063c73f4"
+source = "git+https://github.com/simmsb/dioxus#7e86cf6722736c42cc685d1a578251c4ad6eb25b"
 dependencies = [
  "const-serialize",
  "manganis-core",
@@ -4327,7 +4327,7 @@ dependencies = [
 [[package]]
 name = "manganis-core"
 version = "0.7.2"
-source = "git+https://github.com/simmsb/dioxus#5b97cfe7ddc9db9922ac0bdc4af31a27063c73f4"
+source = "git+https://github.com/simmsb/dioxus#7e86cf6722736c42cc685d1a578251c4ad6eb25b"
 dependencies = [
  "const-serialize",
  "dioxus-cli-config",
@@ -4338,7 +4338,7 @@ dependencies = [
 [[package]]
 name = "manganis-macro"
 version = "0.7.2"
-source = "git+https://github.com/simmsb/dioxus#5b97cfe7ddc9db9922ac0bdc4af31a27063c73f4"
+source = "git+https://github.com/simmsb/dioxus#7e86cf6722736c42cc685d1a578251c4ad6eb25b"
 dependencies = [
  "dunce",
  "macro-string",
@@ -7329,7 +7329,7 @@ dependencies = [
 [[package]]
 name = "subsecond"
 version = "0.7.2"
-source = "git+https://github.com/simmsb/dioxus#5b97cfe7ddc9db9922ac0bdc4af31a27063c73f4"
+source = "git+https://github.com/simmsb/dioxus#7e86cf6722736c42cc685d1a578251c4ad6eb25b"
 dependencies = [
  "js-sys",
  "libc",
@@ -7347,7 +7347,7 @@ dependencies = [
 [[package]]
 name = "subsecond-types"
 version = "0.7.2"
-source = "git+https://github.com/simmsb/dioxus#5b97cfe7ddc9db9922ac0bdc4af31a27063c73f4"
+source = "git+https://github.com/simmsb/dioxus#7e86cf6722736c42cc685d1a578251c4ad6eb25b"
 dependencies = [
  "serde",
 ]
@@ -8077,7 +8077,7 @@ dependencies = [
 
 [[package]]
 name = "ui"
-version = "0.1.0"
+version = "0.1.2"
 dependencies = [
  "chrono",
  "db",
