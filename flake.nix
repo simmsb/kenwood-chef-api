@@ -2,7 +2,8 @@
   inputs = {
     flake-parts.url = "github:hercules-ci/flake-parts";
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    nix2container.url = "github:nlewo/nix2container";
+    # nix2container.url = "github:nlewo/nix2container";
+    nix2container.url = "github:cameronraysmith/nix2container/185-skopeo-fix";
     nix2container.inputs.nixpkgs.follows = "nixpkgs";
     rust-overlay.url = "github:oxalica/rust-overlay";
     rust-overlay.inputs.nixpkgs.follows = "nixpkgs";
@@ -69,8 +70,7 @@
               (craneLib.fileset.commonCargoSources unfilteredRoot)
               (lib.fileset.fileFilter (file: file.hasExt "css") unfilteredRoot)
               (lib.fileset.maybeMissing ./ui)
-              (lib.fileset.maybeMissing ./server.crt)
-              (lib.fileset.maybeMissing ./server.key)
+              (lib.fileset.maybeMissing ./ca_stuff)
             ];
           };
           commonArgs = {
@@ -93,12 +93,6 @@
             // {
               pname = "ui";
               cargoArtifacts = null;
-              # cargoArtifacts = craneLib.buildDepsOnly (commonArgs // {
-              #   buildPhaseCargoCommand = ''
-              #     cargo build --release -p ui --no-default-features --target wasm32-unknown-unknown --features web --locked
-              #     cargo build --release -p ui --no-default-features --features server --locked
-              #   '';
-              # });
               buildPhaseCargoCommand = ''
                 DX_HOME=$(mktemp -d) dx bundle --web --release -p ui
               '';
@@ -120,27 +114,6 @@
             }
           );
 
-          caddyWithConfig = pkgs.writeShellApplication {
-            name = "caddy-with-config";
-            text =
-              let
-                config = pkgs.writeText "caddyfile" ''
-                  0.0.0.0:8080 {
-                    uri strip_prefix {header.X-External-Path}
-
-                    reverse_proxy localhost:8181 {
-                      header_up Accept-Encoding identity
-
-                      resp_body_replace "href=\"" "href=\"{http.request.header.X-External-Path}"
-                      resp_body_replace "src=\"" "src=\"{http.request.header.X-External-Path}"
-                      resp_body_replace "action=\"" "action=\"{http.request.header.X-External-Path}"
-                    }
-                  }
-                '';
-              in
-              "${lib.getExe pkgs.caddy} run --adapter caddyfile --config ${config}";
-          };
-
           nix2container = inputs.nix2container.packages.${system}.nix2container;
         in
         {
@@ -157,12 +130,6 @@
               "${inputs.devshell}/extra/language/rust.nix"
             ];
             packages = devPackages;
-            # packages = devPackages ++ (with pkgs; [
-            #   craneLib.cargo
-            #   craneLib.rustc
-            #   craneLib.clippy
-            #   craneLib.rustfmt
-            # ]);
 
             language.rust = {
               packageSet = craneLib;
@@ -181,7 +148,7 @@
               name = "ghcr.io/simmsb/kenwood-api";
               tag = config.packages.api.version;
               config = {
-                entryPoint = "${lib.getExe config.packages.all} up";
+                entryPoint = [ "${lib.getExe config.packages.all} up" ];
               };
               maxLayers = 120;
             };
@@ -210,25 +177,9 @@
               };
               api.command = "${lib.getExe config.packages.api} server";
               api.depends_on."db_init".condition = "process_completed_successfully";
-              # caddy.command = "${lib.getExe caddyWithConfig}";
             };
           };
-
-          # oci.containers.default = {
-          #   dependencies = [
-          #     pkgs.sqlite
-          #     pkgs.busybox
-          #   ];
-          #   package = { version = config.packages.api.version; } // pkgs.writeShellApplication {
-          #     name = "kenwood-api";
-          #     text = "${lib.getExe config.packages.all} up";
-          #   };
-          #   registry = "ghcr.io/simmsb";
-          #   push = true;
-          #   isRoot = true;
-          # };
         };
-      # oci.enabled = true;
       flake = { };
     };
 }
