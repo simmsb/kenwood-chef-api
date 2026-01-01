@@ -158,7 +158,7 @@
               name = "ghcr.io/simmsb/kenwood-api";
               tag = config.packages.api.version;
               config = {
-                entryPoint = [ "${lib.getExe config.packages.all} up" ];
+                entryPoint = [ "${lib.getExe config.packages.all}" "up" ];
               };
               maxLayers = 120;
             };
@@ -172,7 +172,7 @@
               };
             };
             settings.environment = {
-              DATABASE_URL = "sqlite:///data/db.sqlite?mode=rwc";
+              DATABASE_URL = "sqlite:///config/db.sqlite?mode=rwc";
             };
             settings.processes = {
               db_init.command = ''
