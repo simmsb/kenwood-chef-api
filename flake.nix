@@ -54,6 +54,7 @@
             tailwindcss_4
             binaryen
           ] ++ lib.optionals pkgs.stdenv.isDarwin [
+            pkgs.apple-sdk_14
           ];
 
           rustToolchainFor = p:
@@ -125,20 +126,29 @@
             ];
           };
 
-          devshells.default = {
-            imports = [
-              "${inputs.devshell}/extra/language/rust.nix"
-            ];
+          # devshells.default = {
+          #   imports = [
+          #     "${inputs.devshell}/extra/language/rust.nix"
+          #   ];
+          #   packages = devPackages;
+          #
+          #   language.rust = {
+          #     packageSet = craneLib;
+          #   };
+          #
+          #   env = [
+          #     { name = "FLAKE_ROOT"; eval = "$(${lib.getExe config.flake-root.package})"; }
+          #     { name = "DATABASE_URL"; eval = "sqlite://$FLAKE_ROOT/db.sqlite?mode=rwc"; }
+          #   ];
+          # };
+          #
+          devShells.default = craneLib.devShell {
             packages = devPackages;
 
-            language.rust = {
-              packageSet = craneLib;
-            };
-
-            env = [
-              { name = "FLAKE_ROOT"; eval = "$(${lib.getExe config.flake-root.package})"; }
-              { name = "DATABASE_URL"; eval = "sqlite://$FLAKE_ROOT/db.sqlite?mode=rwc"; }
-            ];
+            shellHook = ''
+              export FLAKE_ROOT="$(${lib.getExe config.flake-root.package})"
+              export DATABASE_URL="sqlite://$FLAKE_ROOT/db.sqlite?mode=rwc"
+            '';
           };
 
           packages = {

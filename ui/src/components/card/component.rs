@@ -14,11 +14,17 @@ pub fn Card(
 
 #[component]
 pub fn CardHeader(
+    #[props(default)] class: String,
     #[props(extends=GlobalAttributes)] attributes: Vec<Attribute>,
     children: Element,
 ) -> Element {
     rsx! {
-        div { class: "card-header", "data-slot": "card-header", ..attributes, {children} }
+        div {
+            class: "{class} card-header",
+            "data-slot": "card-header",
+            ..attributes,
+            {children}
+        }
     }
 }
 

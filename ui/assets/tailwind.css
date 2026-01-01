@@ -164,11 +164,20 @@
   .visible {
     visibility: visible;
   }
+  .absolute {
+    position: absolute;
+  }
   .relative {
     position: relative;
   }
   .static {
     position: static;
+  }
+  .top-0 {
+    top: calc(var(--spacing) * 0);
+  }
+  .right-\[1\.5rem\] {
+    right: 1.5rem;
   }
   .container {
     width: 100%;
@@ -211,9 +220,6 @@
   }
   .max-h-100 {
     max-height: calc(var(--spacing) * 100);
-  }
-  .w-3\/4 {
-    width: calc(3/4 * 100%);
   }
   .w-24 {
     width: calc(var(--spacing) * 24);
@@ -269,6 +275,16 @@
   .outline {
     outline-style: var(--tw-outline-style);
     outline-width: 1px;
+  }
+  .sm\:w-3\/4 {
+    @media (width >= 40rem) {
+      width: calc(3/4 * 100%);
+    }
+  }
+  .sm\:w-full {
+    @media (width >= 40rem) {
+      width: 100%;
+    }
   }
   .sm\:max-w-1\/2 {
     @media (width >= 40rem) {

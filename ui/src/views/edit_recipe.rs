@@ -161,6 +161,7 @@ fn Ingredient(
     ingredient: Store<types::RecipeIngredient>,
     ingredients_matcher: Memo<FuzzyFinder<types::Ingredient>>,
     preparations_matcher: Memo<FuzzyFinder<types::ReferencePreparation>>,
+    delete: EventHandler<MouseEvent>,
 ) -> Element {
     trace!("Render ingredient");
     let ingredient_search_input = use_signal(|| String::new());
@@ -181,8 +182,9 @@ fn Ingredient(
     rsx! {
         Card { class: "grow",
 
-            CardHeader {
-                div { class: "flex flex-row items-center gap-4",
+            CardHeader { class: "relative",
+
+                div { class: "flex flex-col sm:flex-row sm:items-center gap-4",
                     CardTitle {
                         div { class: "flex flex-col gap-4",
                             Label { html_for: "ingredient", "Name" }
@@ -223,6 +225,11 @@ fn Ingredient(
                             },
                         }
                     }
+                }
+
+                div { class: "absolute top-0 right-[1.5rem]",
+
+                    Button { variant: ButtonVariant::Outline, onclick: delete, "X" }
                 }
             }
 
@@ -416,7 +423,7 @@ fn TimeSettingSelector(setting: WriteSignal<types::CapabilitySetting>) -> Elemen
             Label { html_for: "time",
                 "Time ({unwrapped_value().0.total(jiff::Unit::Second).unwrap_or(0.0)} s)"
             }
-            div { class: "flex w-full flex-row gap-4 items-center",
+            div { class: "flex flex-col sm:w-full sm:flex-row gap-4 items-center",
 
                 Input {
                     class: "w-24",
@@ -465,7 +472,7 @@ fn SettingsSelector(setting: WriteSignal<types::CapabilitySetting>) -> Element {
     let type_str = use_memo(move || Some(setting().reference_setting.id.to_string()));
 
     rsx! {
-        div { class: "flex w-full flex-row items-center justify-start gap-4",
+        div { class: "flex flex-col sm:w-full sm:flex-row sm:items-center justify-start gap-4",
             Tabs {
                 value: type_str,
                 on_value_change: move |v: String| {
@@ -787,12 +794,19 @@ fn Step(
     idx: usize,
     step: Store<types::RecipeStep>,
     ingredients: Store<Vec<types::RecipeIngredient>>,
+    delete: EventHandler<MouseEvent>,
 ) -> Element {
     trace!("Render step");
 
     rsx! {
         Card { class: "grow",
-            CardHeader { "Step {idx + 1}" }
+            CardHeader { class: "relative",
+                div { class: "absolute top-0 right-[1.5rem]",
+
+                    Button { variant: ButtonVariant::Outline, onclick: delete, "X" }
+                }
+                "Step {idx + 1}"
+            }
 
             CardContent { class: "flex flex-col gap-4 justify-center",
 
@@ -966,7 +980,7 @@ pub fn EditRecipeInner(recipe: Store<types::Recipe>) -> Element {
 
         div { class: "flex justify-center",
 
-            div { class: "flex flex-col w-3/4 gap-4 justify-center",
+            div { class: "flex flex-col w-full p-4 sm:w-3/4 gap-4 justify-center",
 
                 form {
                     class: "flex flex-col gap-4",
@@ -1106,18 +1120,9 @@ pub fn EditRecipeInner(recipe: Store<types::Recipe>) -> Element {
                                             ingredient,
                                             ingredients_matcher,
                                             preparations_matcher,
-                                        }
-                                    }
-
-                                    div { class: "place-self-end",
-                                        Button {
-                                            variant: ButtonVariant::Outline,
-
-                                            onclick: move |_| {
+                                            delete: move |_| {
                                                 recipe.ingredients().remove(idx);
                                             },
-
-                                            "X"
                                         }
                                     }
                                 }
@@ -1157,18 +1162,9 @@ pub fn EditRecipeInner(recipe: Store<types::Recipe>) -> Element {
                                         idx,
                                         step,
                                         ingredients: recipe.ingredients(),
-                                    }
-
-                                    div { class: "place-self-end",
-                                        Button {
-                                            variant: ButtonVariant::Outline,
-
-                                            onclick: move |_| {
-                                                recipe.steps().remove(idx);
-                                            },
-
-                                            "X"
-                                        }
+                                        delete: move |_| {
+                                            recipe.steps().remove(idx);
+                                        },
                                     }
                                 }
                             }

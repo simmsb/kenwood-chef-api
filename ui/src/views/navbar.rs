@@ -32,7 +32,7 @@ pub fn Navbar() -> Element {
         }
 
         div { class: "flex justify-center",
-            div { class: "flex flex-col w-3/4 gap-4", Outlet::<Route> {} }
+            div { class: "flex flex-col sm:w-3/4 gap-4", Outlet::<Route> {} }
         }
     }
 }
