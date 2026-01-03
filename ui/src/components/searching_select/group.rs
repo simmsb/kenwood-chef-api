@@ -3,7 +3,7 @@
 use dioxus::prelude::*;
 
 use super::context::*;
-use super::utils::*;
+use crate::components::utils::*;
 
 /// The props for the [`SelectGroup`] component
 #[derive(Props, Clone, PartialEq)]

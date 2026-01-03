@@ -248,6 +248,8 @@ pub struct Recipe {
     pub created_by_id: String,
     pub description: String,
     pub etag: String,
+
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub forked_into_other_locales: Vec<ForkedIntoOtherLocale>,
     pub id: String,
     pub ingredients: Vec<RecipeIngredient>,

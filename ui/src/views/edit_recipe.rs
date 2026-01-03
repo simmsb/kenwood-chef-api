@@ -17,6 +17,7 @@ use crate::components::{
     checkbox::*,
     input::Input,
     label::Label,
+    native_select,
     searching_select::*,
     select,
     tabs::*,
@@ -362,7 +363,7 @@ fn SpeedSettingSelector(setting: WriteSignal<types::CapabilitySetting>) -> Eleme
         div { class: "flex w-full flex-row gap-4",
 
             Label { html_for: "speed", "Speed" }
-            select::Select::<types::ReferenceValue> {
+            native_select::NativeSelect::<types::ReferenceValue> {
                 value: Some(value()),
                 on_value_change: move |v: Option<types::ReferenceValue>| {
                     if let Some(v) = v {
@@ -373,18 +374,8 @@ fn SpeedSettingSelector(setting: WriteSignal<types::CapabilitySetting>) -> Eleme
                     }
                 },
 
-                select::SelectTrigger { select::SelectValue {} }
-
-                select::SelectList {
-                    for (idx , value) in types::ReferenceValue::stir_settings().into_iter().enumerate() {
-                        select::SelectOption::<types::ReferenceValue> {
-                            index: idx,
-                            value: value.clone(),
-                            text_value: value.name.clone(),
-
-                            "{value.name}"
-                        }
-                    }
+                for (_idx , value) in types::ReferenceValue::stir_settings().into_iter().enumerate() {
+                    native_select::NativeSelectOption::<types::ReferenceValue> { value: value.clone(), "{value.name}" }
                 }
             }
         }
@@ -532,34 +523,21 @@ fn StepCapability(capability: Store<types::StepCapability>) -> Element {
                 div { class: "flex flex-col sm:flex-row sm:items-center gap-4",
 
                     Label { html_for: "phase", "Phase" }
-                    select::Select::<types::CapabilityPhase> {
-                        // placeholder: capability().phase.name.clone(),
-                        value: Some(Some(capability().phase)),
+                    native_select::NativeSelect {
+                        value: Some(Some(capability.phase().cloned())),
                         on_value_change: move |v| {
                             if let Some(v) = v {
                                 capability.write().phase = v;
                             }
                         },
 
-                        select::SelectTrigger { select::SelectValue {} }
-
-                        select::SelectList {
-                            for (idx , phase) in types::CapabilityPhase::known_options().into_iter().enumerate() {
-                                select::SelectOption::<types::CapabilityPhase> {
-                                    index: idx,
-                                    value: phase.clone(),
-                                    text_value: phase.name.clone(),
-
-                                    "{phase.name}"
-                                }
-                            }
+                        for (_idx , phase) in types::CapabilityPhase::known_options().into_iter().enumerate() {
+                            native_select::NativeSelectOption::<types::CapabilityPhase> { value: phase.clone(), "{phase.name}" }
                         }
                     }
 
-
                     Label { html_for: "capability", "Capability" }
-                    select::Select::<types::ReferenceCapability> {
-                        // placeholder: capability().reference_capability.name.clone(),
+                    native_select::NativeSelect {
                         value: Some(Some(capability.reference_capability().cloned())),
                         on_value_change: move |v| {
                             if let Some(v) = v {
@@ -567,19 +545,10 @@ fn StepCapability(capability: Store<types::StepCapability>) -> Element {
                             }
                         },
 
-                        select::SelectTrigger { select::SelectValue {} }
-
-                        select::SelectList {
-                            for (idx , capability) in types::ReferenceCapability::known_options().into_iter().enumerate() {
-                                select::SelectOption::<types::ReferenceCapability> {
-                                    index: idx,
-                                    value: capability.clone(),
-                                    text_value: capability.name.clone(),
-
-                                    "{capability.name}"
-                                }
-                            }
+                        for (_idx , capability) in types::ReferenceCapability::known_options().into_iter().enumerate() {
+                            native_select::NativeSelectOption::<types::ReferenceCapability> { value: capability.clone(), "{capability.name}" }
                         }
+
                     }
                 }
 
@@ -716,7 +685,7 @@ fn StepIngredient(
                     CardTitle {
                         div { class: "flex flex-col gap-4",
                             Label { html_for: "ingredient", "Name" }
-                            select::Select::<u8> {
+                            native_select::NativeSelect::<u8> {
                                 value: Some(ingredient().ingredient_idx),
                                 on_value_change: move |v| {
                                     if let Some(v) = v {
@@ -728,20 +697,8 @@ fn StepIngredient(
                                     }
                                 },
 
-                                select::SelectTrigger { select::SelectValue {} }
-
-                                select::SelectList {
-                                    for (idx , ingredient) in ingredients().iter().enumerate() {
-                                        select::SelectOption::<u8> {
-                                            index: idx,
-                                            value: idx as u8,
-                                            text_value: ingredient.reference_ingredient.name.clone(),
-
-                                            "{ingredient.reference_ingredient.name}"
-
-                                            select::SelectItemIndicator {}
-                                        }
-                                    }
+                                for (idx , ingredient) in ingredients().iter().enumerate() {
+                                    native_select::NativeSelectOption::<u8> { value: idx as u8, "{ingredient.reference_ingredient.name}" }
                                 }
                             }
                         }

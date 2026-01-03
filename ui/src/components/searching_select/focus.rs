@@ -2,7 +2,7 @@ use std::rc::Rc;
 
 use dioxus::prelude::*;
 
-use super::utils::use_effect_cleanup;
+use crate::components::utils::use_effect_cleanup;
 
 pub(crate) fn use_focus_provider(roving_loop: ReadSignal<bool>) -> FocusState {
     use_context_provider(|| {

@@ -4,7 +4,6 @@ mod list;
 mod option;
 mod select;
 mod trigger;
-mod utils;
 pub use component::*;
 
 mod context;

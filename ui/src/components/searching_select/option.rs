@@ -8,8 +8,9 @@ use super::{
         OptionState, RcPartialEqValue, SelectContext, SelectListContext, SelectOptionContext,
     },
     focus::use_focus_controlled_item,
-    utils::{use_effect_cleanup, use_id_or, use_unique_id},
 };
+
+use crate::components::utils::{use_effect_cleanup, use_id_or, use_unique_id};
 
 /// The props for the [`SelectOption`] component
 #[derive(Props, Clone, PartialEq)]

@@ -7,7 +7,7 @@ use dioxus_sdk::time::use_timeout;
 use dioxus_sdk::time::TimeoutHandle;
 
 use super::context::*;
-use super::utils::*;
+use crate::components::utils::*;
 
 /// The props for the [`SelectList`] component
 #[derive(Props, Clone, PartialEq)]

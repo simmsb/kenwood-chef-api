@@ -7,7 +7,7 @@ use dioxus::prelude::*;
 
 use super::context::*;
 use super::focus::use_focus_provider;
-use super::utils::*;
+use crate::components::utils::*;
 
 /// Props for the main Select component
 #[derive(Props, Clone, PartialEq)]
