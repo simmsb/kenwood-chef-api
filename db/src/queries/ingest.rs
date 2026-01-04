@@ -148,7 +148,7 @@ pub async fn insert_recipes(db: &DatabaseConnection, recipes: &[types::Recipe]) 
             locale: Set(r.locale.clone()),
             created_at: Set(r.created_at),
             modified_at: Set(r.modified_at),
-            published_at: Set(r.published_at),
+            published_at: Set(r.published_at.expect("Imported recipes should be published")),
             created_by_id: Set(r.created_by_id.clone()),
             steps: Set(serde_json::to_value(&r.steps).unwrap()),
             ingredients: Set(serde_json::to_value(&r.ingredients).unwrap()),

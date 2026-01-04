@@ -1181,7 +1181,7 @@ pub fn NewRecipe() -> Element {
         locale: "en-GB".to_owned(),
         modified_at: chrono::Utc::now(),
         organization_id: "toads".to_owned(),
-        published_at: chrono::Utc::now(),
+        published_at: Some(chrono::Utc::now()),
         reference_tags: vec![],
         serves: 1,
         state: "published".to_owned(),

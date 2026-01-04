@@ -257,13 +257,15 @@ pub struct Recipe {
     pub modified_at: DateTime<Utc>,
     pub name: String,
     pub organization_id: String,
-    pub published_at: DateTime<Utc>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub published_at: Option<DateTime<Utc>>,
     pub reference_tags: Vec<ReferenceTag>,
     pub serves: u8,
     pub state: String,
     pub steps: Vec<RecipeStep>,
     #[serde(with = "span_field_wise")]
     pub total_time: jiff::SignedDuration,
+    #[serde(default = "default_visibility")]
     pub visibility: String,
 
     #[serde(
@@ -285,6 +287,10 @@ pub struct Recipe {
 
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub requester_role: Option<String>,
+}
+
+fn default_visibility() -> String {
+    return "all-users".to_owned();
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Store)]

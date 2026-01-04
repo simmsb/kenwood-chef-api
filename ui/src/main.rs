@@ -94,7 +94,7 @@ fn serve_server(original_root: fn() -> Result<VNode, RenderError>, base_path: St
     let base_path_ = base_path.clone();
     let mut cfg = ServeConfig::new().context_provider(move || BasePath(base_path_.clone()));
     cfg.index.head_after_title = format!(
-        "<base href=\"{}\" /> {}",
+        "<base href=\"{}\" /> <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" /> {}",
         base_path.clone(),
         cfg.index.head_after_title
     );
