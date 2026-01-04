@@ -1,6 +1,5 @@
 [package]
 name = "ui"
-version = "0.1.2"
 authors = ["Ben Simms <ben@bensimms.moe>"]
 edition = "2021"
 
@@ -20,7 +19,6 @@ image = { workspace = true, optional = true } #unified
 itertools = { workspace = true } #unified
 jiff = { workspace = true } #unified
 nucleo-matcher = "0.3.1"
-photon-rs = "0.3.3"
 rand = { workspace = true } #unified
 reqwest = { workspace = true, default-features = false, optional = true, features = ["json", "rustls-tls", "blocking"] } #unified
 sea-orm = { version = "^2.0.0-rc.22", features = ["sqlx-sqlite", "macros", "runtime-tokio-rustls", "with-json"], optional = true }

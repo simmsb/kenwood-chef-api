@@ -1,11 +1,12 @@
 use color_eyre::eyre::OptionExt as _;
 use color_eyre::eyre::WrapErr as _;
 use color_eyre::eyre::eyre;
-use sea_orm::EntityLoaderTrait as _;
+use rand::distr::SampleString;
 use sea_orm::QueryFilter;
 use sea_orm::{ActiveModelBehavior as _, EntityTrait as _};
 use sea_orm::{ActiveValue::NotSet, ColumnTrait as _, EntityLoaderTrait};
 use sea_orm::{ActiveValue::Set, DatabaseConnection};
+use sea_orm::{Condition, EntityLoaderTrait as _};
 
 use crate::entities::{self, author, prelude::*, recipe};
 
@@ -114,7 +115,7 @@ pub async fn list_recipe_items(
         .into_iter()
         .map(|r| {
             Ok(types::RecipeItem {
-                id: r.id,
+                id: r.exposed_id.unwrap_or(r.id),
                 name: r.name,
                 author_name: r.author.into_option().ok_or_eyre("Author not loaded")?.name,
                 total_time: r
@@ -131,7 +132,11 @@ pub async fn list_recipe_items(
 
 pub async fn get_recipe(db: &DatabaseConnection, id: &str) -> color_eyre::Result<types::Recipe> {
     let r = Recipe::load()
-        .filter_by_id(id)
+        .filter(
+            Condition::any()
+                .add(recipe::Column::Id.eq(id))
+                .add(recipe::Column::ExposedId.eq(id)),
+        )
         .with(Author)
         .one(db)
         .await?
@@ -214,10 +219,13 @@ pub async fn set_recipe(
         }
     };
 
+    let exposed_id = rand::distr::Alphanumeric.sample_string(&mut rand::rng(), 10);
+
     let model = entities::recipe::ActiveModelEx {
         author: sea_orm::HasOneModel::NotSet,
         author_id: Set(author_id),
         id: Set(r.id.clone()),
+        exposed_id: Set(Some(exposed_id)),
         name: Set(r.name.clone()),
         description: Set(r.description.clone()),
         prep_time: Set(r.prep_time.map(|x| x.to_string())),

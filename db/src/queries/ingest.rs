@@ -135,6 +135,7 @@ pub async fn insert_recipes(db: &DatabaseConnection, recipes: &[types::Recipe]) 
         .iter()
         .map(|r| entities::recipe::ActiveModel {
             id: Set(r.id.clone()),
+            exposed_id: NotSet,
             name: Set(r.name.clone()),
             description: Set(r.description.clone()),
             prep_time: Set(r.prep_time.map(|x| x.to_string())),

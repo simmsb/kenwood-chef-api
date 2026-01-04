@@ -89,6 +89,17 @@
               pkgs.libiconv
             ];
           };
+
+          sea-orm-cli = craneLib.buildPackage {
+            src = pkgs.fetchCrate {
+              pname = "sea-orm-cli";
+              version = "2.0.0-rc.23";
+              hash = "sha256-D4iBaiNO0yQEbc/PN222quQKFAfO75eb2PCA3uX4jGg=";
+            };
+
+            doCheck = false;
+          };
+
           ui_server = craneLib.buildPackage (
             commonArgs
             // {
@@ -143,7 +154,9 @@
           # };
           #
           devShells.default = craneLib.devShell {
-            packages = devPackages;
+            packages = devPackages ++ [
+              sea-orm-cli
+            ];
 
             shellHook = ''
               export FLAKE_ROOT="$(${lib.getExe config.flake-root.package})"

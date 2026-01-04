@@ -9,6 +9,7 @@ color-eyre = "0.6.5"
 itertools = { workspace = true } #unified
 jiff = { workspace = true } #unified
 migration = { workspace = true } #unified
+rand.workspace = true
 sea-orm = { version = "^2.0.0-rc.22", features = ["sqlx-sqlite", "macros", "runtime-tokio-rustls", "with-json"] }
 serde = { workspace = true, features = ["derive"] } #unified
 serde_json = { workspace = true } #unified

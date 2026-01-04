@@ -181,6 +181,12 @@ async fn collections_saved_recipes(headers: HeaderMap) -> Result<axum::Json<Reci
 
     let mut custom = db::queries::recipes::list_recipe_items(db().await, None, None, false).await?;
 
+    // for r in &mut custom {
+    //     if let Some(exposed_id) = r.exposed_id.take() {
+    //         r.id = exposed_id;
+    //     }
+    // }
+
     custom.extend(resp.items);
     resp.items = custom;
 

@@ -7,12 +7,6 @@ use crate::Route;
 #[component]
 pub fn RecipeItem(recipe: types::Recipe) -> Element {
     let recipe_id = recipe.id.clone();
-    let image = use_loader(move || image(recipe_id.clone()))?;
-    let image = use_memo(move || {
-        image
-            .cloned()
-            .map(|x| photon_rs::PhotonImage::new_from_byteslice(x).get_base64())
-    });
 
     rsx! {
         Card { class: "w-full",
@@ -32,14 +26,19 @@ pub fn RecipeItem(recipe: types::Recipe) -> Element {
             }
 
             CardContent {
-                img { width: "100px", height: "100px", src: image }
+                img {
+                    width: "100px",
+                    height: "100px",
+                    src: "image/{recipe_id}",
+                }
             }
         }
     }
 }
 
-#[server]
-async fn image(recipe_id: String) -> Result<Option<Vec<u8>>> {
+#[get("/image/:recipe_id")]
+async fn image(recipe_id: String) -> Result<dioxus_fullstack::response::Response> {
+    use dioxus::fullstack::response::IntoResponse;
     use dioxus::logger::tracing::{info_span, Instrument as _};
 
     let image = db::queries::images::get_image(crate::db::db(), &recipe_id)
@@ -47,5 +46,14 @@ async fn image(recipe_id: String) -> Result<Option<Vec<u8>>> {
         .await
         .ok();
 
-    Ok(image)
+    if let Some(image) = image {
+        return Ok((
+            StatusCode::OK,
+            [(http::header::CONTENT_TYPE, "image/webp")],
+            image,
+        )
+            .into_response());
+    }
+
+    Ok(StatusCode::NOT_FOUND.into_response())
 }

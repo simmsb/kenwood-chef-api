@@ -945,9 +945,16 @@ pub fn EditRecipeInner(recipe: Store<types::Recipe>) -> Element {
                     onsubmit: move |e: FormEvent| async move {
                         e.prevent_default();
 
-                        upload_image(e.into()).await.unwrap();
-
                         let toast_api = consume_toast();
+
+                        if let Err(e) = upload_image(e.into()).await {
+                            toast_api
+                                .error(
+                                    "Uploaded image failed".to_owned(),
+                                    ToastOptions::new().duration(Duration::from_secs(3)),
+                                );
+                            return;
+                        }
 
                         toast_api
                             .info(

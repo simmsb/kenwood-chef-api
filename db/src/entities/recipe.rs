@@ -25,6 +25,7 @@ pub struct Model {
     pub steps: Json,
     pub ingredients: Json,
     pub is_custom: bool,
+    pub exposed_id: Option<String>,
     #[sea_orm(
         belongs_to,
         from = "author_id",
