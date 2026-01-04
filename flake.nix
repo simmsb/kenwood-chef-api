@@ -97,6 +97,8 @@
               hash = "sha256-D4iBaiNO0yQEbc/PN222quQKFAfO75eb2PCA3uX4jGg=";
             };
 
+            cargoExtraArgs = "--no-default-features --features codegen,sqlx-mysql,sqlx-postgres,sqlx-sqlite,runtime-tokio-rustls";
+
             doCheck = false;
           };
 
